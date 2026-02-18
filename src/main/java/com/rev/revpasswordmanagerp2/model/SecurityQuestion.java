@@ -25,4 +25,11 @@ public class SecurityQuestion {
 
     @Column(nullable = false)
     private String answerHash;
+
+    public void setAnswer(String answer) {
+    }
+
+    public String getAnswer() {
+        return "";
+    }
 }

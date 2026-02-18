@@ -2,7 +2,9 @@ package com.rev.revpasswordmanagerp2.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -25,10 +27,15 @@ public class User {
 
     private String phone;
 
-    @Column(nullable = false)
+    // ✅ ONLY ONE COLUMN ANNOTATION
+    @Column(name = "master_password_hash", nullable = false)
     private String masterPasswordHash;
 
     private Boolean twoFactorEnabled = false;
 
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    // ✅ RELATION WITH SECURITY QUESTIONS
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<SecurityQuestion> securityQuestions;
 }
