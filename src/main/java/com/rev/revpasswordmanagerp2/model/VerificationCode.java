@@ -2,6 +2,7 @@ package com.rev.revpasswordmanagerp2.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -17,15 +18,11 @@ public class VerificationCode {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private Long userId;
 
-    @Column(nullable = false)
     private String code;
 
-    private LocalDateTime expiryTime;
-
     private Boolean used = false;
-}
 
+    private LocalDateTime createdTime = LocalDateTime.now();
+}
