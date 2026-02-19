@@ -8,11 +8,11 @@ public class ChangePasswordRequest {
     private String currentPassword;
     private String newPassword;
 
-    // 🔹 Default Constructor
+
     public ChangePasswordRequest() {
     }
 
-    // 🔹 Parameterized Constructor
+
     public ChangePasswordRequest(String usernameOrEmail,
                                  String currentPassword,
                                  String newPassword) {
@@ -21,7 +21,7 @@ public class ChangePasswordRequest {
         this.newPassword = newPassword;
     }
 
-    // 🔹 Getters and Setters
+
 
     public String getUsernameOrEmail() {
         return usernameOrEmail;

@@ -27,7 +27,7 @@ public class User {
 
     private String phone;
 
-    // ✅ ONLY ONE COLUMN ANNOTATION
+
     @Column(name = "master_password_hash", nullable = false)
     private String masterPasswordHash;
 
@@ -35,7 +35,7 @@ public class User {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    // ✅ RELATION WITH SECURITY QUESTIONS
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<SecurityQuestion> securityQuestions;
 }

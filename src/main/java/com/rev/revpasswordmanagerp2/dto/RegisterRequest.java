@@ -8,8 +8,9 @@ public class RegisterRequest {
 
     private String username;
     private String email;
-    private String masterPassword;
     private String phone;
+    private String masterPassword;
 
+    // ✅ MUST be List<SecurityQuestionDTO>
     private List<SecurityQuestionDTO> securityQuestions;
 }

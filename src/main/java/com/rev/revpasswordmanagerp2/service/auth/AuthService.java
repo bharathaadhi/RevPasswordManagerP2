@@ -1,42 +1,26 @@
 package com.rev.revpasswordmanagerp2.service.auth;
 
-import com.rev.revpasswordmanagerp2.dto.ChangePasswordRequest;
-import com.rev.revpasswordmanagerp2.dto.ForgotPasswordRequest;
-import com.rev.revpasswordmanagerp2.dto.LoginRequest;
-import com.rev.revpasswordmanagerp2.dto.RegisterRequest;
+import com.rev.revpasswordmanagerp2.dto.*;
 import com.rev.revpasswordmanagerp2.model.SecurityQuestion;
 import com.rev.revpasswordmanagerp2.model.User;
+import com.rev.revpasswordmanagerp2.repository.PasswordEntryRepository;
 import com.rev.revpasswordmanagerp2.repository.SecurityQuestionRepository;
 import com.rev.revpasswordmanagerp2.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.rev.revpasswordmanagerp2.security.JwtUtil;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import com.rev.revpasswordmanagerp2.security.JwtUtil;
-
 
 import java.util.List;
-
 @Service
+@RequiredArgsConstructor
 public class AuthService {
-    private final JwtUtil jwtutil;
+
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final SecurityQuestionRepository securityQuestionRepository;
-
-    @Autowired
-    public AuthService(
-            PasswordEncoder passwordEncoder,
-            UserRepository userRepository,
-            SecurityQuestionRepository securityQuestionRepository,
-            JwtUtil jwtUtil,  JwtUtil jwtutil1
-    ) {
-        this.passwordEncoder = passwordEncoder;
-        this.userRepository = userRepository;
-        this.securityQuestionRepository = securityQuestionRepository;
-        this.jwtutil = jwtutil1;
-
-    }
-
+    private final PasswordEntryRepository passwordEntryRepository;
+    private final JwtUtil jwtUtil;
 
     // =====================================================
     // ✅ REGISTER USER
@@ -51,22 +35,33 @@ public class AuthService {
             throw new RuntimeException("Email already exists");
         }
 
-        User user = new User();
+        if (request.getSecurityQuestions() == null
+                || request.getSecurityQuestions().size() < 3) {
+            throw new RuntimeException("Minimum 3 security questions required");
+        }
 
+        User user = new User();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
-
-        // ✅ VERY IMPORTANT — HASH PASSWORD
-        String hashedPassword = passwordEncoder.encode(request.getMasterPassword());
-        user.setMasterPasswordHash(hashedPassword);
-
+        user.setPhone(request.getPhone());
         user.setTwoFactorEnabled(false);
 
-        userRepository.save(user);
+        user.setMasterPasswordHash(
+                passwordEncoder.encode(request.getMasterPassword())
+        );
+
+        User savedUser = userRepository.save(user);
+
+        request.getSecurityQuestions().forEach(q -> {
+            SecurityQuestion sq = new SecurityQuestion();
+            sq.setUser(savedUser);
+            sq.setQuestion(q.getQuestion());
+            sq.setAnswerHash(passwordEncoder.encode(q.getAnswer()));
+            securityQuestionRepository.save(sq);
+        });
 
         return "User Registered Successfully";
     }
-
 
     // =====================================================
     // ✅ LOGIN USER
@@ -76,11 +71,9 @@ public class AuthService {
         User user = userRepository
                 .findByUsernameOrEmail(
                         request.getUsernameOrEmail(),
-                        request.getUsernameOrEmail()
-                )
+                        request.getUsernameOrEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // check password
         if (!passwordEncoder.matches(
                 request.getMasterPassword(),
                 user.getMasterPasswordHash())) {
@@ -88,13 +81,8 @@ public class AuthService {
             return "Invalid password";
         }
 
-        // 🔥 Generate JWT token
-        JwtUtil jwtUtil = null;
-        String token = jwtUtil.generateToken(user.getUsername());
-
-        return token;
+        return jwtUtil.generateToken(user.getUsername());
     }
-
 
     // =====================================================
     // ✅ CHANGE PASSWORD
@@ -104,8 +92,7 @@ public class AuthService {
         User user = userRepository
                 .findByUsernameOrEmail(
                         request.getUsernameOrEmail(),
-                        request.getUsernameOrEmail()
-                )
+                        request.getUsernameOrEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (!passwordEncoder.matches(
@@ -132,25 +119,29 @@ public class AuthService {
         User user = userRepository
                 .findByUsernameOrEmail(
                         request.getUsernameOrEmail(),
-                        request.getUsernameOrEmail()
-                )
+                        request.getUsernameOrEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        List<SecurityQuestion> savedQuestions = user.getSecurityQuestions();
+        List<SecurityQuestion> savedQuestions =
+                securityQuestionRepository.findByUserId(user.getId());
 
-        if (savedQuestions == null || savedQuestions.isEmpty()) {
-            return "No security questions found";
+        if (savedQuestions.size() < 3) {
+            throw new RuntimeException("Security questions not configured");
         }
 
-        for (ForgotPasswordRequest.SecurityAnswer answer : request.getAnswers()) {
+        for (SecurityQuestionDTO dto : request.getSecurityQuestions()) {
 
             boolean match = savedQuestions.stream().anyMatch(q ->
-                    q.getQuestion().equalsIgnoreCase(answer.getQuestion()) &&
-                            q.getAnswer().equalsIgnoreCase(answer.getAnswer())
+                    q.getQuestion().equals(dto.getQuestion())
+                            &&
+                            passwordEncoder.matches(
+                                    dto.getAnswer(),
+                                    q.getAnswerHash()
+                            )
             );
 
             if (!match) {
-                return "Security answers do not match";
+                throw new RuntimeException("Security answer mismatch");
             }
         }
 
@@ -161,5 +152,43 @@ public class AuthService {
         userRepository.save(user);
 
         return "Password reset successful";
+    }
+
+    // =====================================================
+    // ✅ TOGGLE 2FA
+    // =====================================================
+    public String toggleTwoFactor(TwoFactorRequest request) {
+
+        User user = userRepository
+                .findByUsernameOrEmail(
+                        request.getUsernameOrEmail(),
+                        request.getUsernameOrEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setTwoFactorEnabled(request.getEnable());
+        userRepository.save(user);
+
+        return "2FA Updated Successfully";
+    }
+
+
+
+    // =====================================================
+    // ✅ DASHBOARD SUMMARY
+    // =====================================================
+    public DashboardResponse getDashboardSummary(String usernameOrEmail){
+
+        User user = userRepository
+                .findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        long totalPasswords =
+                passwordEntryRepository.countByUserId(user.getId());
+
+        return new DashboardResponse(
+                totalPasswords,
+                0,
+                "Dashboard Loaded"
+        );
     }
 }

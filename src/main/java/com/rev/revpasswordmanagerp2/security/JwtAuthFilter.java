@@ -20,7 +20,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        // 🔥 For now allow all requests
+
         filterChain.doFilter(request, response);
     }
 }

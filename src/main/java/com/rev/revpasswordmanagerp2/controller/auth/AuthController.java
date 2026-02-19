@@ -1,17 +1,12 @@
 package com.rev.revpasswordmanagerp2.controller.auth;
 
-import com.rev.revpasswordmanagerp2.dto.ChangePasswordRequest;
-import com.rev.revpasswordmanagerp2.dto.ForgotPasswordRequest;
-import com.rev.revpasswordmanagerp2.dto.LoginRequest;
-import com.rev.revpasswordmanagerp2.dto.RegisterRequest;
+import com.rev.revpasswordmanagerp2.dto.*;
 import com.rev.revpasswordmanagerp2.service.auth.AuthService;
 import jakarta.websocket.EncodeException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import com.rev.revpasswordmanagerp2.dto.TwoFactorRequest;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -26,9 +21,7 @@ public class AuthController {
         String response = authService.changePassword(request);
         return ResponseEntity.ok(response);
     }
-    // ===========================================
-// ✅ FORGOT PASSWORD
-// ===========================================
+
     @PostMapping("/forgotPassword")
     public ResponseEntity<String> forgotPassword(
             @RequestBody ForgotPasswordRequest request) {
@@ -43,6 +36,36 @@ public class AuthController {
 
     @Autowired
     private AuthService authService;
+
+    @PostMapping("/logout")
+    public String logout(){
+        return "Logged out successfully";
+    }
+
+
+    @PostMapping("/toggle2fa")
+    public ResponseEntity<String> toggle2FA(@RequestBody TwoFactorRequest request) {
+
+        String response = authService.toggleTwoFactor(request);
+
+        return ResponseEntity.ok(response);
+    }
+
+
+
+
+
+    // ===========================================
+// ✅ DASHBOARD SUMMARY API
+// ===========================================
+    @GetMapping("/dashboard")
+    public DashboardResponse dashboard(
+            @RequestParam String usernameOrEmail){
+
+        return authService.getDashboardSummary(usernameOrEmail);
+    }
+
+
 
 
     @PostMapping("/register")
