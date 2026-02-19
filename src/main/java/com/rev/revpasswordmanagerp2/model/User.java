@@ -2,7 +2,6 @@ package com.rev.revpasswordmanagerp2.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
@@ -17,18 +16,13 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false, unique = true)
     private String username;
 
-    @Column(unique = true, nullable = false)
     private String email;
 
-    private String phone;
-
     @Column(nullable = false)
-    private String masterPasswordHash;
+    private String password;
 
-    private Boolean twoFactorEnabled = false;
-
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Boolean isActive = true;
 }
