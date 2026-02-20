@@ -18,11 +18,17 @@ public class VerificationCode {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    @Column(nullable = false)
     private String code;
 
-    private Boolean used = false;
+    @Column(name = "expiry_time")
+    private LocalDateTime expiryTime;
 
-    private LocalDateTime createdTime = LocalDateTime.now();
+    @Column(name = "created_time")
+    private LocalDateTime createdTime;
+
+    private Boolean used = false;
 }

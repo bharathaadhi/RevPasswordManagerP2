@@ -92,6 +92,7 @@ public class SecurityService {
         verificationCode.setUserId(userId);
         verificationCode.setCode(code);
         verificationCode.setCreatedTime(LocalDateTime.now());
+        verificationCode.setExpiryTime(LocalDateTime.now().plusMinutes(5));
         verificationCode.setUsed(false);
 
         return verificationCodeRepository.save(verificationCode);
@@ -103,18 +104,18 @@ public class SecurityService {
         VerificationCode vc = verificationCodeRepository.findByCode(code)
                 .orElseThrow(() -> new RuntimeException("Invalid Code"));
 
-        if(Boolean.TRUE.equals(vc.getUsed()))
+        if (Boolean.TRUE.equals(vc.getUsed()))
             return false;
 
-        LocalDateTime expiry = vc.getCreatedTime().plusMinutes(5);
-
-        if (LocalDateTime.now().isAfter(expiry)) return false;
+        if (LocalDateTime.now().isAfter(vc.getExpiryTime()))
+            return false;
 
         vc.setUsed(true);
         verificationCodeRepository.save(vc);
 
         return true;
     }
+
 
     // MASTER PASSWORD CHECK
     public boolean validateMasterPassword(String raw, String encoded) {
