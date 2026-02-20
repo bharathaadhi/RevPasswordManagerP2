@@ -157,7 +157,7 @@ public class AuthService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         long totalPasswords =
-                passwordEntryRepository.countByUserId(user.getId());
+                passwordEntryRepository.countByUser(user);
 
         return new DashboardResponse(
                 totalPasswords,

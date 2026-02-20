@@ -2,6 +2,7 @@ package com.rev.revpasswordmanagerp2.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -17,13 +18,10 @@ public class PasswordHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private Long userId;
 
-    @Column(nullable = false)
-    private String passwordHash;
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String oldPassword;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdTime = LocalDateTime.now();
 }
-

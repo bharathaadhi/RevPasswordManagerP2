@@ -19,22 +19,22 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false, unique = true)
     private String username;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true)
     private String email;
 
     private String phone;
-
 
     @Column(name = "master_password_hash", nullable = false)
     private String masterPasswordHash;
 
     private Boolean twoFactorEnabled = false;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Boolean isActive = true;
 
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<SecurityQuestion> securityQuestions;
