@@ -1,5 +1,6 @@
 package com.rev.revpasswordmanagerp2.repository;
 
+import com.rev.revpasswordmanagerp2.model.Category;
 import com.rev.revpasswordmanagerp2.model.PasswordEntry;
 import com.rev.revpasswordmanagerp2.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -18,9 +19,9 @@ public interface PasswordEntryRepository extends JpaRepository<PasswordEntry, Lo
 
     List<PasswordEntry> findByUserIdAndAccountUsernameContainingIgnoreCase(Long userId, String keyword);
 
-    List<PasswordEntry> findByUserIdAndCategory(Long userId, String category);
+    List<PasswordEntry> findByUserIdAndCategory(Long userId, Category category);
 
-    List<PasswordEntry> findByUserIdAndIsFavoriteTrue(Long userId);
+    List<PasswordEntry> findByUserIdAndFavoriteTrue(Long userId);
 
     List<PasswordEntry> findByUserId(Long userId);
 }

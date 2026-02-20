@@ -30,7 +30,11 @@ public class User {
     @Column(name = "master_password_hash", nullable = false)
     private String masterPasswordHash;
 
+    @Builder.Default
     private Boolean isActive = true;
+
+    @Builder.Default
+    private Boolean twoFactorEnabled = false;
 
     private LocalDateTime createdAt = LocalDateTime.now();
 

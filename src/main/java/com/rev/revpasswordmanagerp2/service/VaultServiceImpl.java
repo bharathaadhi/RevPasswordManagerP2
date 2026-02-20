@@ -1,11 +1,14 @@
 package com.rev.revpasswordmanagerp2.service;
 
+import com.rev.revpasswordmanagerp2.dto.PasswordEntryDTO;
 import com.rev.revpasswordmanagerp2.dto.VaultRequest;
-import com.rev.revpasswordmanagerp2.entity.PasswordEntry;
-import com.rev.revpasswordmanagerp2.entity.User;
+import com.rev.revpasswordmanagerp2.model.Category;
+import com.rev.revpasswordmanagerp2.model.PasswordEntry;
+import com.rev.revpasswordmanagerp2.model.User;
 import com.rev.revpasswordmanagerp2.repository.PasswordEntryRepository;
 import com.rev.revpasswordmanagerp2.repository.UserRepository;
 import com.rev.revpasswordmanagerp2.util.EncryptionUtil;
+import com.rev.revpasswordmanagerp2.util.PasswordMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +21,7 @@ public class VaultServiceImpl implements VaultService {
 
     private final PasswordEntryRepository passwordEntryRepository;
     private final UserRepository userRepository;
-    private final EncryptionUtil encryptionUtil;   // ✅ added
+    private final EncryptionUtil encryptionUtil;
 
     @Override
     public String addPassword(VaultRequest request) {
@@ -31,12 +34,10 @@ public class VaultServiceImpl implements VaultService {
 
         PasswordEntry entry = new PasswordEntry();
         entry.setAccountName(request.getAccountName());
-        entry.setWebsite(request.getWebsite());
-        entry.setUsername(request.getUsername());
-
-        entry.setPassword(encryptionUtil.encrypt(request.getPassword()));
-
-        entry.setCategory(request.getCategory());
+        entry.setWebsiteUrl(request.getWebsite());
+        entry.setAccountUsername(request.getUsername());
+        entry.setEncryptedPassword(encryptionUtil.encrypt(request.getPassword()));
+        entry.setCategory(Category.valueOf(request.getCategory().toUpperCase()));
         entry.setFavorite(false);
         entry.setCreatedAt(LocalDateTime.now());
         entry.setUser(user);
@@ -45,27 +46,35 @@ public class VaultServiceImpl implements VaultService {
 
         return "Password Added Successfully";
     }
+
     @Override
-    public List<PasswordEntry> favorites(String usernameOrEmail){
+    public List<PasswordEntryDTO> favorites(String usernameOrEmail){
 
         User user = userRepository
                 .findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         return passwordEntryRepository
-                .findByUserIdAndFavoriteTrue(user.getId());
+                .findByUserIdAndFavoriteTrue(user.getId())
+                .stream()
+                .map(PasswordMapper::toDTO)
+                .toList();
     }
 
-
     @Override
-    public List<PasswordEntry> getAll(String usernameOrEmail) {
+    public List<PasswordEntryDTO> getAll(String usernameOrEmail) {
 
         User user = userRepository
                 .findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        return passwordEntryRepository.findByUserId(user.getId());
+        return passwordEntryRepository
+                .findByUserId(user.getId())
+                .stream()
+                .map(PasswordMapper::toDTO)
+                .toList();
     }
+
     @Override
     public String favorite(Long id, boolean value){
 
@@ -78,14 +87,12 @@ public class VaultServiceImpl implements VaultService {
         return "Favorite Updated";
     }
 
-
     @Override
     public String delete(Long id) {
 
         passwordEntryRepository.deleteById(id);
         return "Password Deleted";
     }
-
 
     @Override
     public String update(Long id, VaultRequest request) {
@@ -94,41 +101,44 @@ public class VaultServiceImpl implements VaultService {
                 .orElseThrow(() -> new RuntimeException("Password not found"));
 
         entry.setAccountName(request.getAccountName());
-        entry.setWebsite(request.getWebsite());
-        entry.setUsername(request.getUsername());
-
-
-        entry.setPassword(encryptionUtil.encrypt(request.getPassword()));
-
-        entry.setCategory(request.getCategory());
+        entry.setWebsiteUrl(request.getWebsite());
+        entry.setAccountUsername(request.getUsername());
+        entry.setEncryptedPassword(encryptionUtil.encrypt(request.getPassword()));
+        entry.setCategory(Category.valueOf(request.getCategory().toUpperCase()));
         entry.setUpdatedAt(LocalDateTime.now());
 
         passwordEntryRepository.save(entry);
 
         return "Password Updated Successfully";
     }
+
     @Override
-    public List<PasswordEntry> filter(String usernameOrEmail, String category){
+    public List<PasswordEntryDTO> filter(String usernameOrEmail, String category){
+
+        User user = userRepository
+                .findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Category categoryEnum = Category.valueOf(category.toUpperCase());
+
+        return passwordEntryRepository
+                .findByUserIdAndCategory(user.getId(), categoryEnum)
+                .stream()
+                .map(PasswordMapper::toDTO)
+                .toList();
+    }
+
+    @Override
+    public List<PasswordEntryDTO> search(String usernameOrEmail,String keyword){
 
         User user = userRepository
                 .findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         return passwordEntryRepository
-                .findByUserIdAndCategory(user.getId(),category);
+                .findByUserIdAndAccountNameContainingIgnoreCase(user.getId(), keyword)
+                .stream()
+                .map(PasswordMapper::toDTO)
+                .toList();
     }
-
-
-    @Override
-    public List<PasswordEntry> search(String usernameOrEmail,String keyword){
-
-        User user = userRepository
-                .findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        return passwordEntryRepository
-                .findByUserIdAndAccountNameContainingIgnoreCase(user.getId(),keyword);
-    }
-
-
 }

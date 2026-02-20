@@ -12,7 +12,6 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    // 🔐 SECRET KEY (must be long enough)
     private final SecretKey key =
             Keys.hmacShaKeyFor(
                     "revPasswordManagerSecretKeyrevPasswordManagerSecretKey123"
@@ -21,7 +20,7 @@ public class JwtUtil {
     public String generateToken(String username) {
 
         return Jwts.builder()
-                .setSubject(username) // 👈 CORRECT for 0.11.5
+                .setSubject(username)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 3600000))
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -29,7 +28,7 @@ public class JwtUtil {
     }
     public String extractUsername(String token) {
 
-        Claims claims = Jwts.parserBuilder()   // 👈 NOT parser()
+        Claims claims = Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token)

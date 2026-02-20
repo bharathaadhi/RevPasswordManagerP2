@@ -1,26 +1,18 @@
 package com.rev.revpasswordmanagerp2.dto;
 
-import com.rev.revpasswordmanagerp2.enums.Category;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Builder
 public class PasswordEntryDTO {
 
     private Long id;
     private String accountName;
-    private String websiteUrl;
+    private String website;
     private String username;
-
-    private String password;
-
-    private Category category;
-    private String notes;
+    private String category;
     private boolean favorite;
-
-    public PasswordEntryDTO(Long id, String accountName, String websiteUrl, String username, String password, String category, Object notes, boolean favorite) {
-    }
+    private String createdAt;
+    private String updatedAt;
 }

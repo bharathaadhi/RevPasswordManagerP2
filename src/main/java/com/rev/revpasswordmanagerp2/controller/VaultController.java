@@ -1,7 +1,7 @@
 package com.rev.revpasswordmanagerp2.controller;
 
+import com.rev.revpasswordmanagerp2.dto.PasswordEntryDTO;
 import com.rev.revpasswordmanagerp2.dto.VaultRequest;
-import com.rev.revpasswordmanagerp2.entity.PasswordEntry;
 import com.rev.revpasswordmanagerp2.service.VaultService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -19,34 +19,37 @@ public class VaultController {
     public String add(@RequestBody VaultRequest request){
         return vaultService.addPassword(request);
     }
+
     @PutMapping("/update/{id}")
     public String update(@PathVariable Long id,
                          @RequestBody VaultRequest request){
-        return vaultService.update(id,request);
+        return vaultService.update(id, request);
     }
+
     @GetMapping("/all")
-    public List<PasswordEntry> getAll(@RequestParam String usernameOrEmail){
+    public List<PasswordEntryDTO> getAll(
+            @RequestParam String usernameOrEmail){
         return vaultService.getAll(usernameOrEmail);
     }
+
     @GetMapping("/search")
-    public List<PasswordEntry> search(@RequestParam String user,
-                                      @RequestParam String keyword){
-        return vaultService.search(user,keyword);
+    public List<PasswordEntryDTO> search(
+            @RequestParam String usernameOrEmail,
+            @RequestParam String keyword){
+        return vaultService.search(usernameOrEmail, keyword);
     }
+
     @GetMapping("/filter/{category}")
-    public List<PasswordEntry> filter(@RequestParam String user,
-                                      @PathVariable String category){
-        return vaultService.filter(user,category);
+    public List<PasswordEntryDTO> filter(
+            @RequestParam String usernameOrEmail,
+            @PathVariable String category){
+        return vaultService.filter(usernameOrEmail, category);
     }
+
     @PatchMapping("/{id}/favorite")
     public String favorite(@PathVariable Long id,
                            @RequestParam boolean value){
-        return vaultService.favorite(id,value);
-    }
-
-    @GetMapping("/favorites")
-    public List<PasswordEntry> favorites(@RequestParam String user){
-        return vaultService.favorites(user);
+        return vaultService.favorite(id, value);
     }
 
     @DeleteMapping("/delete/{id}")

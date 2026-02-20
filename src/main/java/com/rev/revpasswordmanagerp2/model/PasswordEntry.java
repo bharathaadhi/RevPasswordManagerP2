@@ -37,7 +37,8 @@ public class PasswordEntry {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
-    private Boolean isFavorite = false;
+    @Builder.Default
+    private Boolean favorite = false;
 
     private LocalDateTime createdAt = LocalDateTime.now();
 

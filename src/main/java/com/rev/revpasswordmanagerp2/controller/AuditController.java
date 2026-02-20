@@ -19,7 +19,6 @@ public class AuditController {
     private final AuditService auditService;
     private final UserRepository userRepository;
 
-    // Get Full Security Report
     @GetMapping("/report/{userId}")
     public ResponseEntity<?> getSecurityReport(@PathVariable Long userId) {
 
@@ -31,23 +30,46 @@ public class AuditController {
         return ResponseEntity.ok(report);
     }
 
-    // Get Weak Passwords
     @GetMapping("/weak/{userId}")
-    public ResponseEntity<List<PasswordEntryAuditDTO>> getWeakPasswords(@PathVariable Long userId) {
-
+    public ResponseEntity<?> getWeakPasswords(@PathVariable Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-
-        return ResponseEntity.ok(auditService.getWeakPasswords(user));
+        List<PasswordEntryAuditDTO> weakPasswords = auditService.getWeakPasswords(user);
+        if (weakPasswords.isEmpty()) {
+            return ResponseEntity.ok(
+                    Map.of(
+                            "message", "No weak passwords found",
+                            "data", weakPasswords
+                    )
+            );
+        }
+        return ResponseEntity.ok(
+                Map.of(
+                        "message", "Weak passwords found",
+                        "data", weakPasswords
+                )
+        );
     }
 
-    // Get Reused Passwords
     @GetMapping("/reused/{userId}")
-    public ResponseEntity<List<PasswordEntryAuditDTO>> getReusedPasswords(@PathVariable Long userId) {
-
+    public ResponseEntity<?> getReusedPasswords(@PathVariable Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-
-        return ResponseEntity.ok(auditService.getReusedPasswords(user));
+        List<PasswordEntryAuditDTO> reusedPasswords =
+                auditService.getReusedPasswords(user);
+        if (reusedPasswords.isEmpty()) {
+            return ResponseEntity.ok(
+                    Map.of(
+                            "message", "No reused passwords found",
+                            "data", reusedPasswords
+                    )
+            );
+        }
+        return ResponseEntity.ok(
+                Map.of(
+                        "message", "Reused passwords found",
+                        "data", reusedPasswords
+                )
+        );
     }
 }
