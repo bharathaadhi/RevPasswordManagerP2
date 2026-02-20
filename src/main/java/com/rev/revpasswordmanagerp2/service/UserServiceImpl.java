@@ -2,7 +2,7 @@ package com.rev.revpasswordmanagerp2.service;
 
 import com.rev.revpasswordmanagerp2.dto.LoginRequest;
 import com.rev.revpasswordmanagerp2.dto.RegisterRequest;
-import com.rev.revpasswordmanagerp2.entity.User;
+import com.rev.revpasswordmanagerp2.model.User;
 import com.rev.revpasswordmanagerp2.repository.UserRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -33,7 +33,9 @@ public class UserServiceImpl implements UserService {
         User user = User.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
+                .phone(request.getPhone())
                 .masterPasswordHash(passwordEncoder.encode(request.getMasterPassword()))
+                .isActive(true)
                 .build();
 
         return userRepository.save(user);
@@ -42,13 +44,20 @@ public class UserServiceImpl implements UserService {
     @Override
     public String login(LoginRequest request) {
 
-        User user = (User) userRepository.findByUsername(request.getUsername())
+        User user = userRepository
+                .findByUsernameOrEmail(
+                        request.getUsernameOrEmail(),
+                        request.getUsernameOrEmail()
+                )
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (!passwordEncoder.matches(request.getMasterPassword(), user.getMasterPasswordHash())) {
+        if (!passwordEncoder.matches(
+                request.getMasterPassword(),
+                user.getMasterPasswordHash())) {
+
             throw new RuntimeException("Invalid Master Password!");
         }
 
-        return "Login Successful ✅";
+        return "Login Successful";
     }
 }

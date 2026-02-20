@@ -4,11 +4,10 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class RegisterRequest {
+public class ForgotPasswordRequest {
 
-    private String username;
-    private String email;
-    private String phone;
-    private String masterPassword;
+    private String usernameOrEmail;
+    private String newPassword;
+
     private List<SecurityQuestionDTO> securityQuestions;
 }

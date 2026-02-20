@@ -2,7 +2,7 @@ package com.rev.revpasswordmanagerp2.service;
 
 import com.rev.revpasswordmanagerp2.dto.LoginRequest;
 import com.rev.revpasswordmanagerp2.dto.RegisterRequest;
-import com.rev.revpasswordmanagerp2.entity.User;
+import com.rev.revpasswordmanagerp2.model.User;
 
 public interface UserService {
 
