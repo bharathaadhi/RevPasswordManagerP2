@@ -1,5 +1,6 @@
 package com.rev.revpasswordmanagerp2.service;
 
+import com.rev.revpasswordmanagerp2.dto.PasswordEntryAuditDTO;
 import com.rev.revpasswordmanagerp2.model.PasswordEntry;
 import com.rev.revpasswordmanagerp2.model.PasswordHistory;
 import com.rev.revpasswordmanagerp2.model.User;
@@ -21,7 +22,7 @@ public class AuditService {
     private final PasswordHistoryRepository passwordHistoryRepository;
 
     // Detect weak passwords
-    public List<PasswordEntry> getWeakPasswords(User user) {
+    public List<PasswordEntryAuditDTO> getWeakPasswords(User user) {
 
         List<PasswordEntry> entries =
                 passwordEntryRepository.findByUser(user);
@@ -30,11 +31,17 @@ public class AuditService {
                 .filter(entry ->
                         PasswordStrengthUtil.checkStrength(entry.getEncryptedPassword())
                                 .equalsIgnoreCase("Weak"))
+                .map(entry -> new PasswordEntryAuditDTO(
+                        entry.getId(),
+                        entry.getAccountName(),
+                        entry.getEncryptedPassword(),
+                        entry.getCategory().toString()
+                ))
                 .collect(Collectors.toList());
     }
 
     // Detect reused passwords
-    public List<PasswordEntry> getReusedPasswords(User user) {
+    public List<PasswordEntryAuditDTO> getReusedPasswords(User user) {
 
         List<PasswordEntry> entries =
                 passwordEntryRepository.findByUser(user);
@@ -48,6 +55,12 @@ public class AuditService {
         return entries.stream()
                 .filter(entry ->
                         passwordCount.get(entry.getEncryptedPassword()) > 1)
+                .map(entry -> new PasswordEntryAuditDTO(
+                        entry.getId(),
+                        entry.getAccountName(),
+                        entry.getEncryptedPassword(),
+                        entry.getCategory().toString()
+                ))
                 .collect(Collectors.toList());
     }
 
@@ -57,10 +70,10 @@ public class AuditService {
         List<PasswordEntry> all =
                 passwordEntryRepository.findByUser(user);
 
-        List<PasswordEntry> weak =
+        List<PasswordEntryAuditDTO> weak =
                 getWeakPasswords(user);
 
-        List<PasswordEntry> reused =
+        List<PasswordEntryAuditDTO> reused =
                 getReusedPasswords(user);
 
         Map<String, Object> report = new HashMap<>();

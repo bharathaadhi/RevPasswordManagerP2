@@ -1,7 +1,7 @@
 package com.rev.revpasswordmanagerp2.controller;
 
 import com.rev.revpasswordmanagerp2.dto.*;
-import com.rev.revpasswordmanagerp2.service.auth.AuthService;
+import com.rev.revpasswordmanagerp2.service.AuthService;
 import jakarta.websocket.EncodeException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

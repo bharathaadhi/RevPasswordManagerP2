@@ -1,5 +1,6 @@
 package com.rev.revpasswordmanagerp2.controller;
 
+import com.rev.revpasswordmanagerp2.dto.PasswordEntryAuditDTO;
 import com.rev.revpasswordmanagerp2.model.User;
 import com.rev.revpasswordmanagerp2.repository.UserRepository;
 import com.rev.revpasswordmanagerp2.service.AuditService;
@@ -7,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -31,7 +33,7 @@ public class AuditController {
 
     // Get Weak Passwords
     @GetMapping("/weak/{userId}")
-    public ResponseEntity<?> getWeakPasswords(@PathVariable Long userId) {
+    public ResponseEntity<List<PasswordEntryAuditDTO>> getWeakPasswords(@PathVariable Long userId) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -41,7 +43,7 @@ public class AuditController {
 
     // Get Reused Passwords
     @GetMapping("/reused/{userId}")
-    public ResponseEntity<?> getReusedPasswords(@PathVariable Long userId) {
+    public ResponseEntity<List<PasswordEntryAuditDTO>> getReusedPasswords(@PathVariable Long userId) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));

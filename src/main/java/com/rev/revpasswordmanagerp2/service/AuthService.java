@@ -1,4 +1,4 @@
-package com.rev.revpasswordmanagerp2.service.auth;
+package com.rev.revpasswordmanagerp2.service;
 
 import com.rev.revpasswordmanagerp2.dto.*;
 import com.rev.revpasswordmanagerp2.model.SecurityQuestion;
