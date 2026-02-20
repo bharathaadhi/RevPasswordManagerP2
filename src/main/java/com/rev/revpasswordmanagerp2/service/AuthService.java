@@ -165,4 +165,45 @@ public class AuthService {
                 "Dashboard Loaded"
         );
     }
+    public String updateProfile(UpdateProfileRequest request){
+
+        User user = userRepository
+                .findByUsernameOrEmail(
+                        request.getUsernameOrEmail(),
+                        request.getUsernameOrEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setUsername(request.getUsernameOrEmail());
+        user.setEmail(request.getEmail());
+        user.setPhone(request.getPhone());
+
+        userRepository.save(user);
+
+        return "Profile updated successfully";
+    }
+    public String changeMasterPassword(ChangePasswordRequest request){
+
+        User user = userRepository
+                .findByUsernameOrEmail(
+                        request.getUsernameOrEmail(),
+                        request.getUsernameOrEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if(!passwordEncoder.matches(
+                request.getOldPassword(),
+                user.getMasterPasswordHash())){
+
+            return "Current password incorrect";
+        }
+
+        user.setMasterPasswordHash(
+                passwordEncoder.encode(request.getNewPassword()));
+
+        user.setMasterPasswordHash(
+                passwordEncoder.encode(request.getNewPassword()));
+
+        userRepository.save(user);
+
+        return "Master password updated successfully";
+    }
 }

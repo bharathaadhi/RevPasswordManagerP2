@@ -85,4 +85,15 @@ public class AuditService {
 
         return report;
     }
+    public String securityAlert(User user){
+
+        int weak = getWeakPasswords(user).size();
+        int reused = getReusedPasswords(user).size();
+
+        if(weak > 0 || reused > 0){
+            return "Security Alert: Weak or reused passwords detected";
+        }
+
+        return "All passwords are secure";
+    }
 }

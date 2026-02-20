@@ -2,6 +2,7 @@ package com.rev.revpasswordmanagerp2.controller;
 
 import com.rev.revpasswordmanagerp2.dto.PasswordEntryDTO;
 import com.rev.revpasswordmanagerp2.dto.VaultRequest;
+import com.rev.revpasswordmanagerp2.dto.ViewPasswordRequest;
 import com.rev.revpasswordmanagerp2.service.VaultService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -50,6 +51,38 @@ public class VaultController {
     public String favorite(@PathVariable Long id,
                            @RequestParam boolean value){
         return vaultService.favorite(id, value);
+    }
+
+    @GetMapping("/sort")
+    public List<PasswordEntryDTO> sort(
+            @RequestParam String usernameOrEmail,
+            @RequestParam String sortBy){
+        return vaultService.sort(usernameOrEmail, sortBy);
+    }
+
+    @PostMapping("/view")
+    public PasswordEntryDTO view(
+            @RequestBody ViewPasswordRequest request){
+        return vaultService.viewWithVerification(request);
+    }
+
+    @GetMapping("/export")
+    public List<PasswordEntryDTO> export(
+            @RequestParam String usernameOrEmail){
+        return vaultService.getAll(usernameOrEmail);
+    }
+
+    @PostMapping("/import")
+    public String importVault(
+            @RequestParam String usernameOrEmail,
+            @RequestBody List<VaultRequest> requests){
+
+        for(VaultRequest request : requests){
+            request.setUsernameOrEmail(usernameOrEmail);
+            vaultService.addPassword(request);
+        }
+
+        return "Import successful";
     }
 
     @DeleteMapping("/delete/{id}")

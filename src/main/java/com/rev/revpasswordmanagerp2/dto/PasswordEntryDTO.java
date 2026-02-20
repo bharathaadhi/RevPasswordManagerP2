@@ -15,4 +15,5 @@ public class PasswordEntryDTO {
     private boolean favorite;
     private String createdAt;
     private String updatedAt;
+    private String decryptedPassword;
 }

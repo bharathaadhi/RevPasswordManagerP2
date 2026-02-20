@@ -2,6 +2,7 @@ package com.rev.revpasswordmanagerp2.service;
 
 import com.rev.revpasswordmanagerp2.dto.PasswordEntryDTO;
 import com.rev.revpasswordmanagerp2.dto.VaultRequest;
+import com.rev.revpasswordmanagerp2.dto.ViewPasswordRequest;
 import com.rev.revpasswordmanagerp2.model.Category;
 import com.rev.revpasswordmanagerp2.model.PasswordEntry;
 import com.rev.revpasswordmanagerp2.model.User;
@@ -10,9 +11,12 @@ import com.rev.revpasswordmanagerp2.repository.UserRepository;
 import com.rev.revpasswordmanagerp2.util.EncryptionUtil;
 import com.rev.revpasswordmanagerp2.util.PasswordMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -22,6 +26,9 @@ public class VaultServiceImpl implements VaultService {
     private final PasswordEntryRepository passwordEntryRepository;
     private final UserRepository userRepository;
     private final EncryptionUtil encryptionUtil;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public String addPassword(VaultRequest request) {
@@ -140,5 +147,59 @@ public class VaultServiceImpl implements VaultService {
                 .stream()
                 .map(PasswordMapper::toDTO)
                 .toList();
+    }
+
+    @Override
+    public List<PasswordEntryDTO> sort(String usernameOrEmail, String sortBy){
+
+        User user = userRepository
+                .findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<PasswordEntry> entries =
+                passwordEntryRepository.findByUserId(user.getId());
+
+        switch (sortBy.toLowerCase()){
+            case "name":
+                entries.sort(Comparator.comparing(PasswordEntry::getAccountName));
+                break;
+            case "created":
+                entries.sort(Comparator.comparing(PasswordEntry::getCreatedAt));
+                break;
+            case "updated":
+                entries.sort(Comparator.comparing(PasswordEntry::getUpdatedAt));
+                break;
+            default:
+                throw new RuntimeException("Invalid sort option");
+        }
+
+        return entries.stream()
+                .map(PasswordMapper::toDTO)
+                .toList();
+    }
+
+    @Override
+    public PasswordEntryDTO viewWithVerification(ViewPasswordRequest request){
+
+        PasswordEntry entry = passwordEntryRepository
+                .findById(request.getEntryId())
+                .orElseThrow(() -> new RuntimeException("Password not found"));
+
+        User user = entry.getUser();
+
+        if(!passwordEncoder.matches(
+                request.getMasterPassword(),
+                user.getMasterPasswordHash())){
+
+            throw new RuntimeException("Invalid master password");
+        }
+
+        PasswordEntryDTO dto =
+                PasswordMapper.toDTO(entry);
+
+        dto.setDecryptedPassword(
+                encryptionUtil.decrypt(entry.getEncryptedPassword()));
+
+        return dto;
     }
 }
