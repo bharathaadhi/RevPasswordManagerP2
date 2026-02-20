@@ -1,25 +1,21 @@
 package com.rev.revpasswordmanagerp2.dto;
 
-import org.jspecify.annotations.Nullable;
-
 public class ChangePasswordRequest {
 
     private String usernameOrEmail;
-    private String currentPassword;
+    private String oldPassword;
     private String newPassword;
-
 
     public ChangePasswordRequest() {
     }
+
     public ChangePasswordRequest(String usernameOrEmail,
-                                 String currentPassword,
+                                 String oldPassword,
                                  String newPassword) {
         this.usernameOrEmail = usernameOrEmail;
-        this.currentPassword = currentPassword;
+        this.oldPassword = oldPassword;
         this.newPassword = newPassword;
     }
-
-
 
     public String getUsernameOrEmail() {
         return usernameOrEmail;
@@ -29,12 +25,12 @@ public class ChangePasswordRequest {
         this.usernameOrEmail = usernameOrEmail;
     }
 
-    public String getCurrentPassword() {
-        return currentPassword;
+    public String getOldPassword() {
+        return oldPassword;
     }
 
-    public void setCurrentPassword(String currentPassword) {
-        this.currentPassword = currentPassword;
+    public void setOldPassword(String oldPassword) {
+        this.oldPassword = oldPassword;
     }
 
     public String getNewPassword() {
@@ -43,9 +39,5 @@ public class ChangePasswordRequest {
 
     public void setNewPassword(String newPassword) {
         this.newPassword = newPassword;
-    }
-
-    public @Nullable CharSequence getOldPassword() {
-        return null;
     }
 }

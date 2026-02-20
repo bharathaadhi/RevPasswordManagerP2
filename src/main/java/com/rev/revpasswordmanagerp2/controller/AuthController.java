@@ -1,4 +1,4 @@
-package com.rev.revpasswordmanagerp2.controller.auth;
+package com.rev.revpasswordmanagerp2.controller;
 
 import com.rev.revpasswordmanagerp2.dto.*;
 import com.rev.revpasswordmanagerp2.service.auth.AuthService;
