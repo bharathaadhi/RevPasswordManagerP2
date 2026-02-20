@@ -21,10 +21,6 @@ public class AuthService {
     private final SecurityQuestionRepository securityQuestionRepository;
     private final PasswordEntryRepository passwordEntryRepository;
     private final JwtUtil jwtUtil;
-
-    // =====================================================
-    // ✅ REGISTER USER
-    // =====================================================
     public String registerUser(RegisterRequest request) {
 
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -62,10 +58,6 @@ public class AuthService {
 
         return "User Registered Successfully";
     }
-
-    // =====================================================
-    // ✅ LOGIN USER
-    // =====================================================
     public String login(LoginRequest request) {
 
         User user = userRepository
@@ -83,10 +75,6 @@ public class AuthService {
 
         return jwtUtil.generateToken(user.getUsername());
     }
-
-    // =====================================================
-    // ✅ CHANGE PASSWORD
-    // =====================================================
     public String changePassword(ChangePasswordRequest request) {
 
         User user = userRepository
@@ -110,10 +98,6 @@ public class AuthService {
 
         return "Password changed successfully";
     }
-
-    // =====================================================
-    // ✅ FORGOT PASSWORD
-    // =====================================================
     public String forgotPassword(ForgotPasswordRequest request) {
 
         User user = userRepository
@@ -153,10 +137,6 @@ public class AuthService {
 
         return "Password reset successful";
     }
-
-    // =====================================================
-    // ✅ TOGGLE 2FA
-    // =====================================================
     public String toggleTwoFactor(TwoFactorRequest request) {
 
         User user = userRepository
@@ -170,12 +150,6 @@ public class AuthService {
 
         return "2FA Updated Successfully";
     }
-
-
-
-    // =====================================================
-    // ✅ DASHBOARD SUMMARY
-    // =====================================================
     public DashboardResponse getDashboardSummary(String usernameOrEmail){
 
         User user = userRepository

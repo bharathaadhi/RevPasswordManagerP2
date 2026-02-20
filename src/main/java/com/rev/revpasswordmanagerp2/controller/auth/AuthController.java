@@ -11,9 +11,7 @@ import com.rev.revpasswordmanagerp2.dto.TwoFactorRequest;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
-    // ===========================================
-// ✅ CHANGE PASSWORD API
-// ===========================================
+
     @PostMapping("/changePassword")
     public ResponseEntity<String> changePassword(
             @RequestBody ChangePasswordRequest request) {
@@ -29,11 +27,6 @@ public class AuthController {
         String response = authService.forgotPassword(request);
         return ResponseEntity.ok(response);
     }
-
-
-
-
-
     @Autowired
     private AuthService authService;
 
@@ -41,8 +34,6 @@ public class AuthController {
     public String logout(){
         return "Logged out successfully";
     }
-
-
     @PostMapping("/toggle2fa")
     public ResponseEntity<String> toggle2FA(@RequestBody TwoFactorRequest request) {
 
@@ -50,30 +41,16 @@ public class AuthController {
 
         return ResponseEntity.ok(response);
     }
-
-
-
-
-
-    // ===========================================
-// ✅ DASHBOARD SUMMARY API
-// ===========================================
     @GetMapping("/dashboard")
     public DashboardResponse dashboard(
             @RequestParam String usernameOrEmail){
 
         return authService.getDashboardSummary(usernameOrEmail);
     }
-
-
-
-
     @PostMapping("/register")
     public String register(@RequestBody RegisterRequest request) throws EncodeException {
         return authService.registerUser(request);
     }
-
-
     @PostMapping("/login")
     public String login(@RequestBody LoginRequest request){
         return authService.login(request);

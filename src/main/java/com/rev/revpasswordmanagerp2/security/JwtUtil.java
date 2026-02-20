@@ -18,10 +18,6 @@ public class JwtUtil {
                     "revPasswordManagerSecretKeyrevPasswordManagerSecretKey123"
                             .getBytes()
             );
-
-    // ===========================================
-    // ✅ GENERATE TOKEN
-    // ===========================================
     public String generateToken(String username) {
 
         return Jwts.builder()
@@ -31,10 +27,6 @@ public class JwtUtil {
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
-
-    // ===========================================
-    // ✅ EXTRACT USERNAME
-    // ===========================================
     public String extractUsername(String token) {
 
         Claims claims = Jwts.parserBuilder()   // 👈 NOT parser()

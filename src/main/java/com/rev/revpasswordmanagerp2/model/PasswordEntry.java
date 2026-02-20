@@ -42,5 +42,7 @@ public class PasswordEntry {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+
 }
 

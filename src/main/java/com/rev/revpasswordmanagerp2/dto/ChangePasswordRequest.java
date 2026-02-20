@@ -11,8 +11,6 @@ public class ChangePasswordRequest {
 
     public ChangePasswordRequest() {
     }
-
-
     public ChangePasswordRequest(String usernameOrEmail,
                                  String currentPassword,
                                  String newPassword) {
