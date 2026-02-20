@@ -2,6 +2,7 @@ package com.rev.revpasswordmanagerp2.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import com.rev.revpasswordmanagerp2.entity.User;
 
 @Entity
 @Table(name = "security_questions")

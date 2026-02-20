@@ -1,9 +1,9 @@
-package com.rev.revpasswordmanagerp2.model;
+package com.rev.revpasswordmanagerp2.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
 
+import java.time.LocalDateTime;
 @Entity
 @Table(name = "users")
 @Getter
@@ -23,12 +23,13 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
-    private String phone;
-
     @Column(nullable = false)
     private String masterPasswordHash;
 
-    private Boolean twoFactorEnabled = false;
+    private LocalDateTime createdAt;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @PrePersist
+    public void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 }

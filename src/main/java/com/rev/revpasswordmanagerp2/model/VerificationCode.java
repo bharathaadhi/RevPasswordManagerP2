@@ -2,6 +2,8 @@ package com.rev.revpasswordmanagerp2.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import com.rev.revpasswordmanagerp2.entity.User;
+
 import java.time.LocalDateTime;
 
 @Entity
