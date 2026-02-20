@@ -13,7 +13,7 @@ public class PasswordMapper {
                 entry.getWebsiteUrl(),
                 entry.getUsername(),
 
-                // ❌ Do NOT expose password
+
                 "********",
 
                 entry.getCategory(),

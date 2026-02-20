@@ -20,7 +20,6 @@ public class VaultServiceImpl implements VaultService {
     private final UserRepository userRepository;
     private final EncryptionUtil encryptionUtil;   // ✅ added
 
-    // ✅ ADD PASSWORD
     @Override
     public String addPassword(VaultRequest request) {
 
@@ -35,7 +34,6 @@ public class VaultServiceImpl implements VaultService {
         entry.setWebsite(request.getWebsite());
         entry.setUsername(request.getUsername());
 
-        // 🔐 Encrypt password before saving
         entry.setPassword(encryptionUtil.encrypt(request.getPassword()));
 
         entry.setCategory(request.getCategory());
@@ -58,7 +56,7 @@ public class VaultServiceImpl implements VaultService {
                 .findByUserIdAndFavoriteTrue(user.getId());
     }
 
-    // ✅ GET ALL PASSWORDS
+
     @Override
     public List<PasswordEntry> getAll(String usernameOrEmail) {
 
@@ -80,7 +78,7 @@ public class VaultServiceImpl implements VaultService {
         return "Favorite Updated";
     }
 
-    // ✅ DELETE PASSWORD
+
     @Override
     public String delete(Long id) {
 
@@ -88,7 +86,7 @@ public class VaultServiceImpl implements VaultService {
         return "Password Deleted";
     }
 
-    // ✅ UPDATE PASSWORD
+
     @Override
     public String update(Long id, VaultRequest request) {
 
@@ -99,7 +97,7 @@ public class VaultServiceImpl implements VaultService {
         entry.setWebsite(request.getWebsite());
         entry.setUsername(request.getUsername());
 
-        // 🔐 encrypt again when updating
+
         entry.setPassword(encryptionUtil.encrypt(request.getPassword()));
 
         entry.setCategory(request.getCategory());

@@ -21,8 +21,6 @@ public class PasswordEntry {
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    // ✅ LINK WITH YOUR USER ENTITY
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;

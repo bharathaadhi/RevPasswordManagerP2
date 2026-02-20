@@ -15,7 +15,6 @@ public class PasswordEntryDTO {
     private String websiteUrl;
     private String username;
 
-    // Later we will hide password for security
     private String password;
 
     private Category category;
