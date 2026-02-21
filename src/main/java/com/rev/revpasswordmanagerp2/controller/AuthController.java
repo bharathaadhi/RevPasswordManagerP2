@@ -55,4 +55,8 @@ public class AuthController {
     public String login(@RequestBody LoginRequest request){
         return authService.login(request);
     }
+    @PutMapping("/updateProfile")
+    public String updateProfile(@RequestBody UpdateProfileRequest request){
+        return authService.updateProfile(request);
+    }
 }

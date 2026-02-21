@@ -2,6 +2,7 @@ package com.rev.revpasswordmanagerp2.service;
 
 import com.rev.revpasswordmanagerp2.dto.PasswordEntryDTO;
 import com.rev.revpasswordmanagerp2.dto.VaultRequest;
+import com.rev.revpasswordmanagerp2.dto.ViewPasswordRequest;
 
 import java.util.List;
 
@@ -17,9 +18,14 @@ public interface VaultService<PasswordEntry> {
 
     String update(Long id, VaultRequest request);
 
+    PasswordEntryDTO viewWithVerification(ViewPasswordRequest request);
+
     List<PasswordEntryDTO> favorites(String usernameOrEmail);
 
     List<PasswordEntryDTO> filter(String usernameOrEmail, String category);
 
     List<PasswordEntryDTO> search(String usernameOrEmail,String keyword);
+
+    List<PasswordEntryDTO> sort(String usernameOrEmail, String sortBy);
+
 }
