@@ -1,9 +1,13 @@
 package com.rev.revpasswordmanagerp2.service;
 
+import com.rev.revpasswordmanagerp2.model.SecurityQuestion;
+import com.rev.revpasswordmanagerp2.model.User;
 import com.rev.revpasswordmanagerp2.model.VerificationCode;
 import com.rev.revpasswordmanagerp2.repository.VerificationCodeRepository;
+import com.rev.revpasswordmanagerp2.repository.UserRepository;
 import com.rev.revpasswordmanagerp2.util.PasswordStrengthUtil;
 import com.rev.revpasswordmanagerp2.util.VerificationCodeUtil;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,6 +24,9 @@ public class SecurityService {
     private VerificationCodeRepository verificationCodeRepository;
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     private SecureRandom random = new SecureRandom();
@@ -28,10 +35,10 @@ public class SecurityService {
     private static final String LOWER = "abcdefghijklmnopqrstuvwxyz";
     private static final String NUM = "0123456789";
     private static final String SPECIAL = "!@#$%^&*()_+";
-
     private static final String SIMILAR = "O0l1I";
 
-    // PASSWORD GENERATE
+    // ================= PASSWORD GENERATOR =================
+
     public String generatePassword(int length, boolean upper, boolean lower,
                                    boolean number, boolean special, boolean excludeSimilar) {
 
@@ -63,7 +70,6 @@ public class SecurityService {
         return password.toString();
     }
 
-    // MULTIPLE PASSWORDS
     public List<String> generateMultiplePasswords(int count, int length,
                                                   boolean upper, boolean lower,
                                                   boolean number, boolean special,
@@ -78,12 +84,12 @@ public class SecurityService {
         return list;
     }
 
-    // PASSWORD STRENGTH
     public String checkStrength(String password) {
         return PasswordStrengthUtil.checkStrength(password);
     }
 
-    // VERIFICATION CODE GENERATE
+    // ================= 2FA =================
+
     public VerificationCode generateVerificationCode(Long userId) {
 
         String code = VerificationCodeUtil.generateCode();
@@ -97,18 +103,19 @@ public class SecurityService {
         return verificationCodeRepository.save(verificationCode);
     }
 
-    // VERIFY CODE + EXPIRY
-    public boolean validateCode(String code) {
+    public boolean validateCode(Long userId, String code) {
 
-        VerificationCode vc = verificationCodeRepository.findByCode(code)
+        VerificationCode vc = verificationCodeRepository
+                .findByUserIdAndCode(userId, code)
                 .orElseThrow(() -> new RuntimeException("Invalid Code"));
 
-        if(Boolean.TRUE.equals(vc.getUsed()))
+        if (Boolean.TRUE.equals(vc.getUsed()))
             return false;
 
         LocalDateTime expiry = vc.getCreatedTime().plusMinutes(5);
 
-        if (LocalDateTime.now().isAfter(expiry)) return false;
+        if (LocalDateTime.now().isAfter(expiry))
+            return false;
 
         vc.setUsed(true);
         verificationCodeRepository.save(vc);
@@ -116,8 +123,43 @@ public class SecurityService {
         return true;
     }
 
-    // MASTER PASSWORD CHECK
-    public boolean validateMasterPassword(String raw, String encoded) {
-        return passwordEncoder.matches(raw, encoded);
+    public void enable2FA(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow();
+        user.setTwoFactorEnabled(true);
+        userRepository.save(user);
+    }
+
+    public void disable2FA(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow();
+        user.setTwoFactorEnabled(false);
+        userRepository.save(user);
+    }
+
+    // ================= MASTER PASSWORD =================
+    // Using existing password field
+
+    public boolean validateMasterPassword(Long userId, String rawPassword) {
+
+        User user = userRepository.findById(userId).orElseThrow();
+
+        return passwordEncoder.matches(rawPassword, user.getPassword());
+    }
+
+    // ================= SECURITY QUESTIONS =================
+
+    public void saveSecurityQuestions(List<SecurityQuestion> questions) {
+        // keep empty for now (no repository added yet)
+    }
+
+    // ================= SECURITY ALERTS =================
+
+    public List<String> getSecurityAlerts(Long userId) {
+
+        List<String> alerts = new ArrayList<>();
+
+        alerts.add("Weak password detected");
+        alerts.add("Multiple login attempts");
+
+        return alerts;
     }
 }

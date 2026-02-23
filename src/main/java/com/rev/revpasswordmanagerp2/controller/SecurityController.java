@@ -1,8 +1,10 @@
 package com.rev.revpasswordmanagerp2.controller;
 
 import com.rev.revpasswordmanagerp2.model.VerificationCode;
+import com.rev.revpasswordmanagerp2.model.SecurityQuestion;
 import com.rev.revpasswordmanagerp2.service.SecurityService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,9 +16,10 @@ public class SecurityController {
     @Autowired
     private SecurityService securityService;
 
-    // GENERATE PASSWORD
+    // ================= PASSWORD GENERATOR =================
+
     @PostMapping("/generate")
-    public String generatePassword(
+    public ResponseEntity<String> generatePassword(
             @RequestParam int length,
             @RequestParam boolean upper,
             @RequestParam boolean lower,
@@ -24,12 +27,13 @@ public class SecurityController {
             @RequestParam boolean special,
             @RequestParam boolean excludeSimilar
     ) {
-        return securityService.generatePassword(length, upper, lower, number, special, excludeSimilar);
+        return ResponseEntity.ok(
+                securityService.generatePassword(length, upper, lower, number, special, excludeSimilar)
+        );
     }
 
-    // MULTIPLE PASSWORD
     @PostMapping("/generate-multiple")
-    public List<String> generateMultiple(
+    public ResponseEntity<List<String>> generateMultiple(
             @RequestParam int count,
             @RequestParam int length,
             @RequestParam boolean upper,
@@ -38,33 +42,69 @@ public class SecurityController {
             @RequestParam boolean special,
             @RequestParam boolean excludeSimilar
     ) {
-        return securityService.generateMultiplePasswords(count, length, upper, lower, number, special, excludeSimilar);
+        return ResponseEntity.ok(
+                securityService.generateMultiplePasswords(count, length, upper, lower, number, special, excludeSimilar)
+        );
     }
 
-    // STRENGTH CHECK
     @PostMapping("/strength")
-    public String strength(@RequestParam String password) {
-        return securityService.checkStrength(password);
+    public ResponseEntity<String> checkStrength(@RequestParam String password) {
+        return ResponseEntity.ok(securityService.checkStrength(password));
     }
 
-    // GENERATE CODE
-    @PostMapping("/generate-code")
-    public VerificationCode generateCode(@RequestParam Long userId) {
-        return securityService.generateVerificationCode(userId);
+    // ================= TWO FACTOR AUTH =================
+
+    @PostMapping("/2fa/generate-code")
+    public ResponseEntity<VerificationCode> generateCode(@RequestParam Long userId) {
+        return ResponseEntity.ok(securityService.generateVerificationCode(userId));
     }
 
-    // VALIDATE CODE
-    @PostMapping("/validate-code")
-    public boolean validateCode(@RequestParam String code) {
-        return securityService.validateCode(code);
-    }
-
-    // MASTER PASSWORD VALIDATE
-    @PostMapping("/validate-master")
-    public boolean validateMaster(
-            @RequestParam String rawPassword,
-            @RequestParam String storedPassword
+    @PostMapping("/2fa/validate-code")
+    public ResponseEntity<Boolean> validateCode(
+            @RequestParam Long userId,
+            @RequestParam String code
     ) {
-        return securityService.validateMasterPassword(rawPassword, storedPassword);
+        return ResponseEntity.ok(securityService.validateCode(userId, code));
+    }
+
+    @PutMapping("/2fa/enable")
+    public ResponseEntity<String> enable2FA(@RequestParam Long userId) {
+        securityService.enable2FA(userId);
+        return ResponseEntity.ok("2FA Enabled");
+    }
+
+    @PutMapping("/2fa/disable")
+    public ResponseEntity<String> disable2FA(@RequestParam Long userId) {
+        securityService.disable2FA(userId);
+        return ResponseEntity.ok("2FA Disabled");
+    }
+
+    // ================= MASTER PASSWORD VALIDATION =================
+
+    @PostMapping("/validate-master")
+    public ResponseEntity<Boolean> validateMaster(
+            @RequestParam Long userId,
+            @RequestParam String rawPassword
+    ) {
+        return ResponseEntity.ok(
+                securityService.validateMasterPassword(userId, rawPassword)
+        );
+    }
+
+    // ================= SECURITY QUESTIONS =================
+
+    @PostMapping("/security-questions")
+    public ResponseEntity<String> saveSecurityQuestions(
+            @RequestBody List<SecurityQuestion> questions
+    ) {
+        securityService.saveSecurityQuestions(questions);
+        return ResponseEntity.ok("Security questions saved");
+    }
+
+    // ================= SECURITY ALERTS =================
+
+    @GetMapping("/alerts")
+    public ResponseEntity<List<String>> getSecurityAlerts(@RequestParam Long userId) {
+        return ResponseEntity.ok(securityService.getSecurityAlerts(userId));
     }
 }

@@ -24,5 +24,11 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    // MASTER PASSWORD (for vault access validation)
+    private String masterPassword;
+
+    // TWO FACTOR AUTH ENABLED
+    private Boolean twoFactorEnabled = false;
+
     private Boolean isActive = true;
 }
