@@ -1,5 +1,6 @@
 package com.rev.revpasswordmanagerp2.controller;
 
+import com.rev.revpasswordmanagerp2.dto.ChangePasswordRequest;
 import com.rev.revpasswordmanagerp2.model.VerificationCode;
 import com.rev.revpasswordmanagerp2.service.SecurityService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,5 +61,18 @@ public class SecurityController {
             @RequestParam String storedPassword
     ) {
         return securityService.validateMasterPassword(rawPassword, storedPassword);
+    }
+
+    @PostMapping("/change-master")
+    public String changeMaster(
+            @RequestBody ChangePasswordRequest request) {
+        return securityService.changeMasterPassword(request);
+    }
+
+    @PostMapping("/toggle-2fa")
+    public String toggle2FA(
+            @RequestParam String usernameOrEmail,
+            @RequestParam boolean enabled) {
+        return securityService.toggleTwoFactor(usernameOrEmail, enabled);
     }
 }

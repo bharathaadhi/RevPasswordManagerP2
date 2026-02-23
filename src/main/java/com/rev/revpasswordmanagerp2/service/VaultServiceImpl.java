@@ -45,6 +45,7 @@ public class VaultServiceImpl implements VaultService {
         entry.setAccountUsername(request.getUsername());
         entry.setEncryptedPassword(encryptionUtil.encrypt(request.getPassword()));
         entry.setCategory(Category.valueOf(request.getCategory().toUpperCase()));
+        entry.setNotes(request.getNotes());
         entry.setFavorite(false);
         entry.setCreatedAt(LocalDateTime.now());
         entry.setUser(user);

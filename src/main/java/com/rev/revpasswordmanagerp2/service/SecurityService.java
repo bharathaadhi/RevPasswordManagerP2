@@ -1,9 +1,12 @@
 package com.rev.revpasswordmanagerp2.service;
 
+import com.rev.revpasswordmanagerp2.dto.ChangePasswordRequest;
 import com.rev.revpasswordmanagerp2.model.VerificationCode;
 import com.rev.revpasswordmanagerp2.repository.VerificationCodeRepository;
 import com.rev.revpasswordmanagerp2.util.PasswordStrengthUtil;
 import com.rev.revpasswordmanagerp2.util.VerificationCodeUtil;
+import com.rev.revpasswordmanagerp2.repository.UserRepository;
+import com.rev.revpasswordmanagerp2.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,6 +24,9 @@ public class SecurityService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private UserRepository userRepository;
 
     private SecureRandom random = new SecureRandom();
 
@@ -116,6 +122,43 @@ public class SecurityService {
         return true;
     }
 
+    // CHANGE MASTER PASSWORD
+    public String changeMasterPassword(ChangePasswordRequest request) {
+
+        User user = userRepository
+                .findByUsernameOrEmail(
+                        request.getUsernameOrEmail(),
+                        request.getUsernameOrEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Verify old password
+        if (!passwordEncoder.matches(
+                request.getOldPassword(),
+                user.getMasterPasswordHash())) {
+
+            throw new RuntimeException("Current password incorrect");
+        }
+
+        // Encode new password
+        String encoded = passwordEncoder.encode(request.getNewPassword());
+
+        user.setMasterPasswordHash(encoded);
+        userRepository.save(user);
+
+        return "Master Password Updated Successfully";
+    }
+
+    public String toggleTwoFactor(String usernameOrEmail, boolean enabled) {
+
+        User user = userRepository
+                .findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setTwoFactorEnabled(enabled);
+        userRepository.save(user);
+
+        return enabled ? "2FA Enabled" : "2FA Disabled";
+    }
 
     // MASTER PASSWORD CHECK
     public boolean validateMasterPassword(String raw, String encoded) {

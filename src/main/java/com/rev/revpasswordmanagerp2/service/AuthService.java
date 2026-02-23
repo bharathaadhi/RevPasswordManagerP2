@@ -1,12 +1,15 @@
 package com.rev.revpasswordmanagerp2.service;
 
 import com.rev.revpasswordmanagerp2.dto.*;
+import com.rev.revpasswordmanagerp2.model.PasswordEntry;
 import com.rev.revpasswordmanagerp2.model.SecurityQuestion;
 import com.rev.revpasswordmanagerp2.model.User;
 import com.rev.revpasswordmanagerp2.repository.PasswordEntryRepository;
 import com.rev.revpasswordmanagerp2.repository.SecurityQuestionRepository;
 import com.rev.revpasswordmanagerp2.repository.UserRepository;
 import com.rev.revpasswordmanagerp2.security.JwtUtil;
+import com.rev.revpasswordmanagerp2.util.EncryptionUtil;
+import com.rev.revpasswordmanagerp2.util.PasswordStrengthUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,6 +21,7 @@ public class AuthService {
 
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
+    private final EncryptionUtil encryptionUtil;
     private final SecurityQuestionRepository securityQuestionRepository;
     private final PasswordEntryRepository passwordEntryRepository;
     private final JwtUtil jwtUtil;
@@ -156,12 +160,24 @@ public class AuthService {
                 .findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        long totalPasswords =
-                passwordEntryRepository.countByUser(user);
+        List<PasswordEntry> entries =
+                passwordEntryRepository.findByUser(user);
+
+        long totalPasswords = entries.size();
+
+        long weakCount = entries.stream()
+                .filter(entry -> {
+                    String decrypted =
+                            encryptionUtil.decrypt(entry.getEncryptedPassword());
+                    String strength =
+                            PasswordStrengthUtil.checkStrength(decrypted);
+                    return strength.equalsIgnoreCase("Weak");
+                })
+                .count();
 
         return new DashboardResponse(
                 totalPasswords,
-                0,
+                weakCount,
                 "Dashboard Loaded"
         );
     }
@@ -195,9 +211,6 @@ public class AuthService {
 
             return "Current password incorrect";
         }
-
-        user.setMasterPasswordHash(
-                passwordEncoder.encode(request.getNewPassword()));
 
         user.setMasterPasswordHash(
                 passwordEncoder.encode(request.getNewPassword()));

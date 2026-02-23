@@ -11,4 +11,5 @@ public class VaultRequest {
     private String username;
     private String password;
     private String category;
+    private String notes;
 }
