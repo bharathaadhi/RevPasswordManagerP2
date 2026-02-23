@@ -36,8 +36,12 @@ public class User {
     @Builder.Default
     private Boolean twoFactorEnabled = false;
 
+    @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user",
+            cascade = CascadeType.ALL,
+            fetch = FetchType.LAZY,
+            orphanRemoval = true)
     private List<SecurityQuestion> securityQuestions;
 }

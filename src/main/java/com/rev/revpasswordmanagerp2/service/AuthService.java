@@ -9,6 +9,7 @@ import com.rev.revpasswordmanagerp2.repository.SecurityQuestionRepository;
 import com.rev.revpasswordmanagerp2.repository.UserRepository;
 import com.rev.revpasswordmanagerp2.security.JwtUtil;
 import com.rev.revpasswordmanagerp2.util.EncryptionUtil;
+import com.rev.revpasswordmanagerp2.util.PasswordMapper;
 import com.rev.revpasswordmanagerp2.util.PasswordStrengthUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -175,10 +176,18 @@ public class AuthService {
                 })
                 .count();
 
+        // Recent 5 passwords sorted by createdAt DESC
+        List<PasswordEntryDTO> recentEntries = entries.stream()
+                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                .limit(5)
+                .map(entry -> PasswordMapper.toDTO(entry))
+                .toList();
+
         return new DashboardResponse(
                 totalPasswords,
                 weakCount,
-                "Dashboard Loaded"
+                "Dashboard Loaded",
+                recentEntries
         );
     }
     public String updateProfile(UpdateProfileRequest request){
