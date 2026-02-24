@@ -1,18 +1,19 @@
 package com.rev.revpasswordmanagerp2.service;
 
 import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class SecurityServiceTest {
 
-    private SecurityService securityService = new SecurityService();
+    private final SecurityService securityService =
+            new SecurityServiceImpl(null, null, null);
 
     @Test
-    void checkStrength_ShouldReturnStrong() {
+    void testGeneratePassword() {
+        String password = securityService.generatePassword(
+                12, true, true, true, true, false);
 
-        String strength = securityService.checkStrength("Strong@123");
-
-        assertEquals("Strong", strength);
+        assertNotNull(password);
+        assertEquals(12, password.length());
     }
 }
