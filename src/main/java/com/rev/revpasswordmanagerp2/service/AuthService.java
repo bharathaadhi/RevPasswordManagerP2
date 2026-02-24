@@ -16,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -26,6 +27,7 @@ public class AuthService {
     private final SecurityQuestionRepository securityQuestionRepository;
     private final PasswordEntryRepository passwordEntryRepository;
     private final JwtUtil jwtUtil;
+
     public String registerUser(RegisterRequest request) {
 
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -41,15 +43,17 @@ public class AuthService {
             throw new RuntimeException("Minimum 3 security questions required");
         }
 
+        String encodedPassword =
+                passwordEncoder.encode(request.getMasterPassword());
+
         User user = new User();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setPhone(request.getPhone());
         user.setTwoFactorEnabled(false);
 
-        user.setMasterPasswordHash(
-                passwordEncoder.encode(request.getMasterPassword())
-        );
+        user.setPassword(encodedPassword);
+        user.setMasterPasswordHash(encodedPassword);
 
         User savedUser = userRepository.save(user);
 
@@ -63,6 +67,7 @@ public class AuthService {
 
         return "User Registered Successfully";
     }
+
     public String login(LoginRequest request) {
 
         User user = userRepository
@@ -80,6 +85,7 @@ public class AuthService {
 
         return jwtUtil.generateToken(user.getUsername());
     }
+
     public String changePassword(ChangePasswordRequest request) {
 
         User user = userRepository
@@ -95,14 +101,17 @@ public class AuthService {
             return "Old password incorrect";
         }
 
-        user.setMasterPasswordHash(
-                passwordEncoder.encode(request.getNewPassword())
-        );
+        String encoded =
+                passwordEncoder.encode(request.getNewPassword());
+
+        user.setPassword(encoded);
+        user.setMasterPasswordHash(encoded);
 
         userRepository.save(user);
 
         return "Password changed successfully";
     }
+
     public String forgotPassword(ForgotPasswordRequest request) {
 
         User user = userRepository
@@ -134,14 +143,17 @@ public class AuthService {
             }
         }
 
-        user.setMasterPasswordHash(
-                passwordEncoder.encode(request.getNewPassword())
-        );
+        String encoded =
+                passwordEncoder.encode(request.getNewPassword());
+
+        user.setPassword(encoded);
+        user.setMasterPasswordHash(encoded);
 
         userRepository.save(user);
 
         return "Password reset successful";
     }
+
     public String toggleTwoFactor(TwoFactorRequest request) {
 
         User user = userRepository
@@ -155,6 +167,7 @@ public class AuthService {
 
         return "2FA Updated Successfully";
     }
+
     public DashboardResponse getDashboardSummary(String usernameOrEmail){
 
         User user = userRepository
@@ -176,7 +189,6 @@ public class AuthService {
                 })
                 .count();
 
-        // Recent 5 passwords sorted by createdAt DESC
         List<PasswordEntryDTO> recentEntries = entries.stream()
                 .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
                 .limit(5)
@@ -190,6 +202,7 @@ public class AuthService {
                 recentEntries
         );
     }
+
     public String updateProfile(UpdateProfileRequest request){
 
         User user = userRepository
@@ -206,6 +219,7 @@ public class AuthService {
 
         return "Profile updated successfully";
     }
+
     public String changeMasterPassword(ChangePasswordRequest request){
 
         User user = userRepository
@@ -221,8 +235,11 @@ public class AuthService {
             return "Current password incorrect";
         }
 
-        user.setMasterPasswordHash(
-                passwordEncoder.encode(request.getNewPassword()));
+        String encoded =
+                passwordEncoder.encode(request.getNewPassword());
+
+        user.setPassword(encoded);
+        user.setMasterPasswordHash(encoded);
 
         userRepository.save(user);
 

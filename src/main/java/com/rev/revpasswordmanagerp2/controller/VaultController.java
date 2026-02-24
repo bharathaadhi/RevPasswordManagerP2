@@ -16,22 +16,30 @@ public class VaultController {
 
     private final VaultService vaultService;
 
-    @PostMapping("/add")
+    // ================= ADD PASSWORD =================
+
+    @PostMapping
     public String add(@RequestBody VaultRequest request){
         return vaultService.addPassword(request);
     }
 
-    @PutMapping("/update/{id}")
+    // ================= UPDATE PASSWORD =================
+
+    @PutMapping("/{id}")
     public String update(@PathVariable Long id,
                          @RequestBody VaultRequest request){
         return vaultService.update(id, request);
     }
 
-    @GetMapping("/all")
+    // ================= GET ALL =================
+
+    @GetMapping
     public List<PasswordEntryDTO> getAll(
             @RequestParam String usernameOrEmail){
         return vaultService.getAll(usernameOrEmail);
     }
+
+    // ================= SEARCH =================
 
     @GetMapping("/search")
     public List<PasswordEntryDTO> search(
@@ -40,6 +48,8 @@ public class VaultController {
         return vaultService.search(usernameOrEmail, keyword);
     }
 
+    // ================= FILTER =================
+
     @GetMapping("/filter/{category}")
     public List<PasswordEntryDTO> filter(
             @RequestParam String usernameOrEmail,
@@ -47,11 +57,15 @@ public class VaultController {
         return vaultService.filter(usernameOrEmail, category);
     }
 
+    // ================= FAVORITE TOGGLE =================
+
     @PatchMapping("/{id}/favorite")
     public String favorite(@PathVariable Long id,
                            @RequestParam boolean value){
         return vaultService.favorite(id, value);
     }
+
+    // ================= SORT =================
 
     @GetMapping("/sort")
     public List<PasswordEntryDTO> sort(
@@ -60,32 +74,35 @@ public class VaultController {
         return vaultService.sort(usernameOrEmail, sortBy);
     }
 
+    // ================= VIEW WITH MASTER PASSWORD =================
+
     @PostMapping("/view")
     public PasswordEntryDTO view(
             @RequestBody ViewPasswordRequest request){
         return vaultService.viewWithVerification(request);
     }
 
+    // ================= EXPORT VAULT =================
+
     @GetMapping("/export")
     public List<PasswordEntryDTO> export(
             @RequestParam String usernameOrEmail){
-        return vaultService.getAll(usernameOrEmail);
+        return vaultService.exportVault(usernameOrEmail);
     }
+
+    // ================= IMPORT VAULT =================
 
     @PostMapping("/import")
     public String importVault(
             @RequestParam String usernameOrEmail,
             @RequestBody List<VaultRequest> requests){
 
-        for(VaultRequest request : requests){
-            request.setUsernameOrEmail(usernameOrEmail);
-            vaultService.addPassword(request);
-        }
-
-        return "Import successful";
+        return vaultService.importVault(usernameOrEmail, requests);
     }
 
-    @DeleteMapping("/delete/{id}")
+    // ================= DELETE =================
+
+    @DeleteMapping("/{id}")
     public String delete(@PathVariable Long id){
         return vaultService.delete(id);
     }

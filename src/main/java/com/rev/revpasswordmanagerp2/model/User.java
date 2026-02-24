@@ -27,6 +27,9 @@ public class User {
 
     private String phone;
 
+    @Column(name = "password", nullable = false)
+    private String password;
+
     @Column(name = "master_password_hash", nullable = false)
     private String masterPasswordHash;
 

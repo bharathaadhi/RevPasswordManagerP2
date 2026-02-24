@@ -30,6 +30,8 @@ public class VaultServiceImpl implements VaultService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    // ================= ADD PASSWORD =================
+
     @Override
     public String addPassword(VaultRequest request) {
 
@@ -40,11 +42,14 @@ public class VaultServiceImpl implements VaultService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         PasswordEntry entry = new PasswordEntry();
+
         entry.setAccountName(request.getAccountName());
         entry.setWebsiteUrl(request.getWebsite());
         entry.setAccountUsername(request.getUsername());
-        entry.setEncryptedPassword(encryptionUtil.encrypt(request.getPassword()));
-        entry.setCategory(Category.valueOf(request.getCategory().toUpperCase()));
+        entry.setEncryptedPassword(
+                encryptionUtil.encrypt(request.getPassword()));
+        entry.setCategory(
+                Category.valueOf(request.getCategory().toUpperCase()));
         entry.setNotes(request.getNotes());
         entry.setFavorite(false);
         entry.setCreatedAt(LocalDateTime.now());
@@ -55,19 +60,7 @@ public class VaultServiceImpl implements VaultService {
         return "Password Added Successfully";
     }
 
-    @Override
-    public List<PasswordEntryDTO> favorites(String usernameOrEmail){
-
-        User user = userRepository
-                .findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        return passwordEntryRepository
-                .findByUserIdAndFavoriteTrue(user.getId())
-                .stream()
-                .map(PasswordMapper::toDTO)
-                .toList();
-    }
+    // ================= GET ALL =================
 
     @Override
     public List<PasswordEntryDTO> getAll(String usernameOrEmail) {
@@ -78,6 +71,22 @@ public class VaultServiceImpl implements VaultService {
 
         return passwordEntryRepository
                 .findByUserId(user.getId())
+                .stream()
+                .map(PasswordMapper::toDTO)
+                .toList();
+    }
+
+    // ================= FAVORITES =================
+
+    @Override
+    public List<PasswordEntryDTO> favorites(String usernameOrEmail){
+
+        User user = userRepository
+                .findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return passwordEntryRepository
+                .findByUserIdAndFavoriteTrue(user.getId())
                 .stream()
                 .map(PasswordMapper::toDTO)
                 .toList();
@@ -95,12 +104,16 @@ public class VaultServiceImpl implements VaultService {
         return "Favorite Updated";
     }
 
+    // ================= DELETE =================
+
     @Override
     public String delete(Long id) {
 
         passwordEntryRepository.deleteById(id);
         return "Password Deleted";
     }
+
+    // ================= UPDATE =================
 
     @Override
     public String update(Long id, VaultRequest request) {
@@ -111,14 +124,18 @@ public class VaultServiceImpl implements VaultService {
         entry.setAccountName(request.getAccountName());
         entry.setWebsiteUrl(request.getWebsite());
         entry.setAccountUsername(request.getUsername());
-        entry.setEncryptedPassword(encryptionUtil.encrypt(request.getPassword()));
-        entry.setCategory(Category.valueOf(request.getCategory().toUpperCase()));
+        entry.setEncryptedPassword(
+                encryptionUtil.encrypt(request.getPassword()));
+        entry.setCategory(
+                Category.valueOf(request.getCategory().toUpperCase()));
         entry.setUpdatedAt(LocalDateTime.now());
 
         passwordEntryRepository.save(entry);
 
         return "Password Updated Successfully";
     }
+
+    // ================= FILTER =================
 
     @Override
     public List<PasswordEntryDTO> filter(String usernameOrEmail, String category){
@@ -127,7 +144,8 @@ public class VaultServiceImpl implements VaultService {
                 .findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Category categoryEnum = Category.valueOf(category.toUpperCase());
+        Category categoryEnum =
+                Category.valueOf(category.toUpperCase());
 
         return passwordEntryRepository
                 .findByUserIdAndCategory(user.getId(), categoryEnum)
@@ -135,6 +153,8 @@ public class VaultServiceImpl implements VaultService {
                 .map(PasswordMapper::toDTO)
                 .toList();
     }
+
+    // ================= SEARCH =================
 
     @Override
     public List<PasswordEntryDTO> search(String usernameOrEmail,String keyword){
@@ -144,11 +164,14 @@ public class VaultServiceImpl implements VaultService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         return passwordEntryRepository
-                .findByUserIdAndAccountNameContainingIgnoreCase(user.getId(), keyword)
+                .findByUserIdAndAccountNameContainingIgnoreCase(
+                        user.getId(), keyword)
                 .stream()
                 .map(PasswordMapper::toDTO)
                 .toList();
     }
+
+    // ================= SORT =================
 
     @Override
     public List<PasswordEntryDTO> sort(String usernameOrEmail, String sortBy){
@@ -162,13 +185,16 @@ public class VaultServiceImpl implements VaultService {
 
         switch (sortBy.toLowerCase()){
             case "name":
-                entries.sort(Comparator.comparing(PasswordEntry::getAccountName));
+                entries.sort(
+                        Comparator.comparing(PasswordEntry::getAccountName));
                 break;
             case "created":
-                entries.sort(Comparator.comparing(PasswordEntry::getCreatedAt));
+                entries.sort(
+                        Comparator.comparing(PasswordEntry::getCreatedAt));
                 break;
             case "updated":
-                entries.sort(Comparator.comparing(PasswordEntry::getUpdatedAt));
+                entries.sort(
+                        Comparator.comparing(PasswordEntry::getUpdatedAt));
                 break;
             default:
                 throw new RuntimeException("Invalid sort option");
@@ -178,6 +204,8 @@ public class VaultServiceImpl implements VaultService {
                 .map(PasswordMapper::toDTO)
                 .toList();
     }
+
+    // ================= VIEW WITH MASTER PASSWORD =================
 
     @Override
     public PasswordEntryDTO viewWithVerification(ViewPasswordRequest request){
@@ -202,5 +230,27 @@ public class VaultServiceImpl implements VaultService {
                 encryptionUtil.decrypt(entry.getEncryptedPassword()));
 
         return dto;
+    }
+
+    // ================= EXPORT VAULT =================
+
+    @Override
+    public List<PasswordEntryDTO> exportVault(String usernameOrEmail){
+
+        return getAll(usernameOrEmail);
+    }
+
+    // ================= IMPORT VAULT =================
+
+    @Override
+    public String importVault(String usernameOrEmail,
+                              List<VaultRequest> requests){
+
+        for(VaultRequest request : requests){
+            request.setUsernameOrEmail(usernameOrEmail);
+            addPassword(request);
+        }
+
+        return "Import Successful";
     }
 }
