@@ -62,7 +62,15 @@ public class VaultController {
     @PatchMapping("/{id}/favorite")
     public String favorite(@PathVariable Long id,
                            @RequestParam boolean value){
-        return vaultService.favorite(id, value);
+        return vaultService.favorite(id,value);
+    }
+
+    // ================= GET FAVORITES =================
+
+    @GetMapping("/favorites")
+    public List<PasswordEntryDTO> getFavorites(
+            @RequestParam String usernameOrEmail){
+        return vaultService.getFavorites(usernameOrEmail);
     }
 
     // ================= SORT =================

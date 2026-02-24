@@ -168,41 +168,6 @@ public class AuthService {
         return "2FA Updated Successfully";
     }
 
-    public DashboardResponse getDashboardSummary(String usernameOrEmail){
-
-        User user = userRepository
-                .findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        List<PasswordEntry> entries =
-                passwordEntryRepository.findByUser(user);
-
-        long totalPasswords = entries.size();
-
-        long weakCount = entries.stream()
-                .filter(entry -> {
-                    String decrypted =
-                            encryptionUtil.decrypt(entry.getEncryptedPassword());
-                    String strength =
-                            PasswordStrengthUtil.checkStrength(decrypted);
-                    return strength.equalsIgnoreCase("Weak");
-                })
-                .count();
-
-        List<PasswordEntryDTO> recentEntries = entries.stream()
-                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
-                .limit(5)
-                .map(entry -> PasswordMapper.toDTO(entry))
-                .toList();
-
-        return new DashboardResponse(
-                totalPasswords,
-                weakCount,
-                "Dashboard Loaded",
-                recentEntries
-        );
-    }
-
     public String updateProfile(UpdateProfileRequest request){
 
         User user = userRepository

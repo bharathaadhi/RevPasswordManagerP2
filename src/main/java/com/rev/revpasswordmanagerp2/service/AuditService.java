@@ -6,6 +6,7 @@ import com.rev.revpasswordmanagerp2.model.PasswordHistory;
 import com.rev.revpasswordmanagerp2.model.User;
 import com.rev.revpasswordmanagerp2.repository.PasswordHistoryRepository;
 import com.rev.revpasswordmanagerp2.repository.PasswordEntryRepository;
+import com.rev.revpasswordmanagerp2.util.EncryptionUtil;
 import com.rev.revpasswordmanagerp2.util.PasswordStrengthUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,8 @@ public class AuditService {
 
     private final PasswordEntryRepository passwordEntryRepository;
     private final PasswordHistoryRepository passwordHistoryRepository;
+    private final EncryptionUtil encryptionUtil;
+
 
     // Detect weak passwords
     public List<PasswordEntryAuditDTO> getWeakPasswords(User user) {
@@ -28,9 +31,14 @@ public class AuditService {
                 passwordEntryRepository.findByUser(user);
 
         return entries.stream()
-                .filter(entry ->
-                        PasswordStrengthUtil.checkStrength(entry.getEncryptedPassword())
-                                .equalsIgnoreCase("Weak"))
+                .filter(entry -> {
+                    String decrypted =
+                            encryptionUtil.decrypt(entry.getEncryptedPassword());
+
+                    return PasswordStrengthUtil
+                            .checkStrength(decrypted)
+                            .equalsIgnoreCase("Weak");
+                })
                 .map(entry -> new PasswordEntryAuditDTO(
                         entry.getId(),
                         entry.getAccountName(),
@@ -76,11 +84,26 @@ public class AuditService {
         List<PasswordEntryAuditDTO> reused =
                 getReusedPasswords(user);
 
+        int score = 100
+                - (weak.size() * 10)
+                - (reused.size() * 15);
+
+        score = Math.max(score, 0);
+
+        String alert;
+        if (weak.size() > 0 || reused.size() > 0) {
+            alert = "Security Alert: Weak or reused passwords detected";
+        } else {
+            alert = "All passwords are secure";
+        }
+
         Map<String, Object> report = new HashMap<>();
 
         report.put("totalPasswords", all.size());
         report.put("weakPasswords", weak.size());
         report.put("reusedPasswords", reused.size());
+        report.put("securityScore", score);
+        report.put("alertMessage", alert);
         report.put("generatedAt", LocalDateTime.now());
 
         return report;

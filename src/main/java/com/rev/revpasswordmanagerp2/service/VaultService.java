@@ -22,7 +22,7 @@ public interface VaultService {
 
     String favorite(Long id, boolean value);
 
-    List<PasswordEntryDTO> favorites(String usernameOrEmail);
+    List<PasswordEntryDTO> getFavorites(String usernameOrEmail);
 
     // ================= SEARCH / FILTER / SORT =================
 

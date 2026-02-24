@@ -41,12 +41,6 @@ public class AuthController {
 
         return ResponseEntity.ok(response);
     }
-    @GetMapping("/dashboard")
-    public DashboardResponse dashboard(
-            @RequestParam String usernameOrEmail){
-
-        return authService.getDashboardSummary(usernameOrEmail);
-    }
     @PostMapping("/register")
     public String register(@RequestBody RegisterRequest request) throws EncodeException {
         return authService.registerUser(request);

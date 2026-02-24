@@ -53,6 +53,7 @@ public class VaultServiceImpl implements VaultService {
         entry.setNotes(request.getNotes());
         entry.setFavorite(false);
         entry.setCreatedAt(LocalDateTime.now());
+        entry.setUpdatedAt(LocalDateTime.now());
         entry.setUser(user);
 
         passwordEntryRepository.save(entry);
@@ -79,7 +80,7 @@ public class VaultServiceImpl implements VaultService {
     // ================= FAVORITES =================
 
     @Override
-    public List<PasswordEntryDTO> favorites(String usernameOrEmail){
+    public List<PasswordEntryDTO> getFavorites(String usernameOrEmail){
 
         User user = userRepository
                 .findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
@@ -109,6 +110,9 @@ public class VaultServiceImpl implements VaultService {
     @Override
     public String delete(Long id) {
 
+        if(!passwordEntryRepository.existsById(id)){
+            throw new RuntimeException("Password not found");
+        }
         passwordEntryRepository.deleteById(id);
         return "Password Deleted";
     }
@@ -124,10 +128,13 @@ public class VaultServiceImpl implements VaultService {
         entry.setAccountName(request.getAccountName());
         entry.setWebsiteUrl(request.getWebsite());
         entry.setAccountUsername(request.getUsername());
-        entry.setEncryptedPassword(
-                encryptionUtil.encrypt(request.getPassword()));
+        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+            entry.setEncryptedPassword(
+                    encryptionUtil.encrypt(request.getPassword()));
+        }
         entry.setCategory(
                 Category.valueOf(request.getCategory().toUpperCase()));
+        entry.setNotes(request.getNotes());
         entry.setUpdatedAt(LocalDateTime.now());
 
         passwordEntryRepository.save(entry);
