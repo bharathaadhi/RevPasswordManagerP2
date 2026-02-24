@@ -33,8 +33,7 @@ public class AuditController {
     }
 
     @GetMapping("/weak")
-    public ResponseEntity<?> getWeakPasswords(
-            @RequestParam String usernameOrEmail) {
+    public ResponseEntity<?> getWeakPasswords(@RequestParam String usernameOrEmail) {
 
         User user = userRepository
                 .findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
@@ -47,8 +46,7 @@ public class AuditController {
     }
 
     @GetMapping("/reused")
-    public ResponseEntity<?> getReusedPasswords(
-            @RequestParam String usernameOrEmail) {
+    public ResponseEntity<?> getReusedPasswords(@RequestParam String usernameOrEmail) {
 
         User user = userRepository
                 .findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
