@@ -30,7 +30,7 @@ public class AuditController {
         return ResponseEntity.ok(report);
     }
 
-    @GetMapping("/weak/{userId}")
+    @GetMapping("/weak")
     public ResponseEntity<?> getWeakPasswords(@PathVariable Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -51,7 +51,7 @@ public class AuditController {
         );
     }
 
-    @GetMapping("/reused/{userId}")
+    @GetMapping("/reused")
     public ResponseEntity<?> getReusedPasswords(@PathVariable Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
