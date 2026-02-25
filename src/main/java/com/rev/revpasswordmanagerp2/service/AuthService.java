@@ -68,24 +68,45 @@ public class AuthService {
         return "User Registered Successfully";
     }
 
+    // ================= FIXED LOGIN =================
     public String login(LoginRequest request) {
 
-        User user = userRepository
-                .findByUsernameOrEmail(
-                        request.getUsernameOrEmail(),
-                        request.getUsernameOrEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        try {
 
-        if (!passwordEncoder.matches(
-                request.getMasterPassword(),
-                user.getMasterPasswordHash())) {
+            User user = userRepository
+                    .findByUsername(request.getUsernameOrEmail())
+                    .orElse(
+                            userRepository.findByEmail(request.getUsernameOrEmail())
+                                    .orElse(null)
+                    );
 
-            return "Invalid password";
+            // user not found
+            if(user == null){
+                return "INVALID_CREDENTIALS";
+            }
+
+            // null safety
+            if(user.getMasterPasswordHash() == null){
+                return "INVALID_CREDENTIALS";
+            }
+
+            boolean match = passwordEncoder.matches(
+                    request.getMasterPassword(),
+                    user.getMasterPasswordHash()
+            );
+
+            if(!match){
+                return "INVALID_CREDENTIALS";
+            }
+
+            return jwtUtil.generateToken(user.getUsername());
+
+        } catch(Exception e){
+
+            //  NEVER allow crash
+            return "INVALID_CREDENTIALS";
         }
-
-        return jwtUtil.generateToken(user.getUsername());
     }
-
     public String changePassword(ChangePasswordRequest request) {
 
         User user = userRepository

@@ -46,10 +46,23 @@ public class VaultServiceImpl implements VaultService {
         entry.setAccountName(request.getAccountName());
         entry.setWebsiteUrl(request.getWebsite());
         entry.setAccountUsername(request.getUsername());
+
+        // ✅ SAFE PASSWORD (avoid NULL crash during import)
+        String safePassword = (request.getPassword() == null || request.getPassword().isEmpty())
+                ? "TEMP123!"   // fallback password for imported entries
+                : request.getPassword();
+
         entry.setEncryptedPassword(
-                encryptionUtil.encrypt(request.getPassword()));
-        entry.setCategory(
-                Category.valueOf(request.getCategory().toUpperCase()));
+                encryptionUtil.encrypt(safePassword));
+
+        // ✅ SAFE CATEGORY (avoid enum crash)
+        try {
+            entry.setCategory(
+                    Category.valueOf(request.getCategory().toUpperCase()));
+        } catch (Exception e) {
+            entry.setCategory(Category.OTHER);
+        }
+
         entry.setNotes(request.getNotes());
         entry.setFavorite(false);
         entry.setCreatedAt(LocalDateTime.now());
@@ -124,10 +137,21 @@ public class VaultServiceImpl implements VaultService {
         entry.setAccountName(request.getAccountName());
         entry.setWebsiteUrl(request.getWebsite());
         entry.setAccountUsername(request.getUsername());
+
+        String safePassword = (request.getPassword() == null || request.getPassword().isEmpty())
+                ? encryptionUtil.decrypt(entry.getEncryptedPassword())
+                : request.getPassword();
+
         entry.setEncryptedPassword(
-                encryptionUtil.encrypt(request.getPassword()));
-        entry.setCategory(
-                Category.valueOf(request.getCategory().toUpperCase()));
+                encryptionUtil.encrypt(safePassword));
+
+        try {
+            entry.setCategory(
+                    Category.valueOf(request.getCategory().toUpperCase()));
+        } catch (Exception e) {
+            entry.setCategory(Category.OTHER);
+        }
+
         entry.setUpdatedAt(LocalDateTime.now());
 
         passwordEntryRepository.save(entry);
@@ -144,8 +168,7 @@ public class VaultServiceImpl implements VaultService {
                 .findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Category categoryEnum =
-                Category.valueOf(category.toUpperCase());
+        Category categoryEnum = Category.valueOf(category.toUpperCase());
 
         return passwordEntryRepository
                 .findByUserIdAndCategory(user.getId(), categoryEnum)
@@ -185,16 +208,13 @@ public class VaultServiceImpl implements VaultService {
 
         switch (sortBy.toLowerCase()){
             case "name":
-                entries.sort(
-                        Comparator.comparing(PasswordEntry::getAccountName));
+                entries.sort(Comparator.comparing(PasswordEntry::getAccountName));
                 break;
             case "created":
-                entries.sort(
-                        Comparator.comparing(PasswordEntry::getCreatedAt));
+                entries.sort(Comparator.comparing(PasswordEntry::getCreatedAt));
                 break;
             case "updated":
-                entries.sort(
-                        Comparator.comparing(PasswordEntry::getUpdatedAt));
+                entries.sort(Comparator.comparing(PasswordEntry::getUpdatedAt));
                 break;
             default:
                 throw new RuntimeException("Invalid sort option");
@@ -232,7 +252,7 @@ public class VaultServiceImpl implements VaultService {
         return dto;
     }
 
-    // ================= EXPORT VAULT =================
+    // ================= EXPORT =================
 
     @Override
     public List<PasswordEntryDTO> exportVault(String usernameOrEmail){
@@ -240,7 +260,7 @@ public class VaultServiceImpl implements VaultService {
         return getAll(usernameOrEmail);
     }
 
-    // ================= IMPORT VAULT =================
+    // ================= IMPORT =================
 
     @Override
     public String importVault(String usernameOrEmail,
