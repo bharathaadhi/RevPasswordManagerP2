@@ -36,6 +36,10 @@ public interface VaultService {
 
     PasswordEntryDTO viewWithVerification(ViewPasswordRequest request);
 
+    // ================= OLD PASSWORDS =================
+
+    List<PasswordEntryDTO> getOldPasswords(String usernameOrEmail);
+
     // ================= IMPORT / EXPORT =================
 
     List<PasswordEntryDTO> exportVault(String usernameOrEmail);

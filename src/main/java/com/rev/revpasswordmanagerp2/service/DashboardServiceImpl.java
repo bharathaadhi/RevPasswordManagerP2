@@ -34,14 +34,23 @@ public class DashboardServiceImpl implements DashboardService {
         long total = allEntries.size();
         long weak = auditService.getWeakPasswords(user).size();
         long reused = auditService.getReusedPasswords(user).size();
+        long old = auditService.getOldPasswords(user).size();
 
         int score = 100
                 - (int)(weak * 10)
-                - (int)(reused * 15);
+                - (int)(reused * 15)
+                - (int)(old * 5);
 
         score = Math.max(score, 0);
 
         String alert = auditService.securityAlert(user);
+
+        List<PasswordEntryDTO> favorites =
+                allEntries.stream()
+                        .filter(PasswordEntry::getFavorite)
+                        .limit(5)
+                        .map(PasswordMapper::toDTO)
+                        .toList();
 
         List<PasswordEntryDTO> recent =
                 allEntries.stream()
@@ -51,17 +60,11 @@ public class DashboardServiceImpl implements DashboardService {
                         .map(PasswordMapper::toDTO)
                         .toList();
 
-        List<PasswordEntryDTO> favorites =
-                allEntries.stream()
-                        .filter(PasswordEntry::getFavorite)
-                        .limit(5)
-                        .map(PasswordMapper::toDTO)
-                        .toList();
-
         return new DashboardResponse(
                 total,
                 weak,
                 reused,
+                old,
                 score,
                 alert,
                 recent,

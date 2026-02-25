@@ -88,41 +88,6 @@ public class SecurityServiceImpl implements SecurityService {
         return PasswordStrengthUtil.checkStrength(password);
     }
 
-    // VERIFICATION CODE GENERATE
-    @Override
-    public VerificationCode generateVerificationCode(Long userId) {
-
-        String code = VerificationCodeUtil.generateCode();
-
-        VerificationCode verificationCode = new VerificationCode();
-        verificationCode.setUserId(userId);
-        verificationCode.setCode(code);
-        verificationCode.setCreatedTime(LocalDateTime.now());
-        verificationCode.setExpiryTime(LocalDateTime.now().plusMinutes(5));
-        verificationCode.setUsed(false);
-
-        return verificationCodeRepository.save(verificationCode);
-    }
-
-    // VERIFY CODE + EXPIRY
-    @Override
-    public boolean validateCode(String code) {
-
-        VerificationCode vc = verificationCodeRepository.findByCode(code)
-                .orElseThrow(() -> new RuntimeException("Invalid Code"));
-
-        if (Boolean.TRUE.equals(vc.getUsed()))
-            return false;
-
-        if (LocalDateTime.now().isAfter(vc.getExpiryTime()))
-            return false;
-
-        vc.setUsed(true);
-        verificationCodeRepository.save(vc);
-
-        return true;
-    }
-
     // CHANGE MASTER PASSWORD
     @Override
     public String changeMasterPassword(ChangePasswordRequest request) {

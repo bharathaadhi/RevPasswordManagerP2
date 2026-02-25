@@ -17,10 +17,6 @@ public interface SecurityService {
 
     String checkStrength(String password);
 
-    VerificationCode generateVerificationCode(Long userId);
-
-    boolean validateCode(String code);
-
     String changeMasterPassword(ChangePasswordRequest request);
 
     String toggleTwoFactor(String usernameOrEmail, boolean enabled);

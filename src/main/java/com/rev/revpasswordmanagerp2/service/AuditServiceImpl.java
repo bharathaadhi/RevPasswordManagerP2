@@ -123,4 +123,16 @@ public class AuditServiceImpl implements AuditService {
 
         return "All passwords are secure";
     }
+
+    @Override
+    public List<PasswordEntry> getOldPasswords(User user) {
+
+        LocalDateTime ninetyDaysAgo = LocalDateTime.now().minusDays(90);
+
+        return passwordEntryRepository.findByUser(user)
+                .stream()
+                .filter(entry -> entry.getUpdatedAt() != null &&
+                        entry.getUpdatedAt().isBefore(ninetyDaysAgo))
+                .toList();
+    }
 }

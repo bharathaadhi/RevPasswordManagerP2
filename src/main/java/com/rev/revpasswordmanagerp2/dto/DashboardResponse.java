@@ -6,6 +6,7 @@ public record DashboardResponse(
         long totalPasswords,
         long weakPasswords,
         long reusedPasswords,
+        long oldPasswords,
         int securityScore,
         String alertMessage,
         List<PasswordEntryDTO> recentEntries,

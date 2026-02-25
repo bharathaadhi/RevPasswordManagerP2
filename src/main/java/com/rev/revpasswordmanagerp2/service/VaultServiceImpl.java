@@ -239,6 +239,25 @@ public class VaultServiceImpl implements VaultService {
         return dto;
     }
 
+    // ================= OLD PASSWORD =================
+    @Override
+    public List<PasswordEntryDTO> getOldPasswords(String usernameOrEmail){
+
+        User user = userRepository
+                .findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        LocalDateTime ninetyDaysAgo = LocalDateTime.now().minusDays(90);
+
+        return passwordEntryRepository
+                .findByUserId(user.getId())
+                .stream()
+                .filter(entry ->
+                        entry.getUpdatedAt().isBefore(ninetyDaysAgo))
+                .map(PasswordMapper::toDTO)
+                .toList();
+    }
+
     // ================= EXPORT VAULT =================
 
     @Override

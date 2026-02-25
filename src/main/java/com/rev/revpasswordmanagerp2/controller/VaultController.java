@@ -114,4 +114,13 @@ public class VaultController {
     public String delete(@PathVariable Long id){
         return vaultService.delete(id);
     }
+
+    // ================= OLD PASSWORD =================
+
+    @GetMapping("/old")
+    public List<PasswordEntryDTO> getOld(
+            @RequestParam String usernameOrEmail){
+        return vaultService.getOldPasswords(usernameOrEmail);
+    }
+
 }

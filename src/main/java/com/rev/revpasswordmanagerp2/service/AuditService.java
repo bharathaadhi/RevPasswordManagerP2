@@ -1,6 +1,7 @@
 package com.rev.revpasswordmanagerp2.service;
 
 import com.rev.revpasswordmanagerp2.dto.PasswordEntryAuditDTO;
+import com.rev.revpasswordmanagerp2.model.PasswordEntry;
 import com.rev.revpasswordmanagerp2.model.User;
 
 import java.util.List;
@@ -15,4 +16,6 @@ public interface AuditService {
     Map<String, Object> generateSecurityReport(User user);
 
     String securityAlert(User user);
+
+    List<PasswordEntry> getOldPasswords(User user);
 }
