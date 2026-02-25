@@ -44,4 +44,11 @@ public class ProfileController {
         return ResponseEntity.ok(
                 userService.updateSecurityQuestions(request));
     }
+    @GetMapping("/me")
+    public ResponseEntity<?> getProfile(@RequestParam String usernameOrEmail) {
+
+        return ResponseEntity.ok(
+                userService.getProfile(usernameOrEmail)
+        );
+    }
 }

@@ -82,7 +82,7 @@ public class AuthServiceImpl implements AuthService {
                 request.getMasterPassword(),
                 user.getMasterPasswordHash())) {
 
-            return "Invalid password";
+            return "INVALID_CREDENTIALS";
         }
 
         return jwtUtil.generateToken(user.getUsername());

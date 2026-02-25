@@ -47,10 +47,19 @@ public class VaultServiceImpl implements VaultService {
         entry.setAccountName(request.getAccountName());
         entry.setWebsiteUrl(request.getWebsite());
         entry.setAccountUsername(request.getUsername());
-        entry.setEncryptedPassword(
-                encryptionUtil.encrypt(request.getPassword()));
-        entry.setCategory(
-                Category.valueOf(request.getCategory().toUpperCase()));
+
+        String safePassword = (request.getPassword() == null || request.getPassword().isEmpty())
+                ? "TEMP123!"
+                : request.getPassword();
+
+        entry.setEncryptedPassword(encryptionUtil.encrypt(safePassword));
+
+        try {
+            entry.setCategory(Category.valueOf(request.getCategory().toUpperCase()));
+        } catch (Exception e) {
+            entry.setCategory(Category.OTHER);
+        }
+
         entry.setNotes(request.getNotes());
         entry.setFavorite(false);
         entry.setCreatedAt(LocalDateTime.now());
@@ -131,13 +140,18 @@ public class VaultServiceImpl implements VaultService {
         entry.setWebsiteUrl(request.getWebsite());
         entry.setAccountUsername(request.getUsername());
 
-        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
-            entry.setEncryptedPassword(
-                    encryptionUtil.encrypt(request.getPassword()));
+        String safePassword = (request.getPassword() == null || request.getPassword().isEmpty())
+                ? encryptionUtil.decrypt(entry.getEncryptedPassword())
+                : request.getPassword();
+
+        entry.setEncryptedPassword(encryptionUtil.encrypt(safePassword));
+
+        try {
+            entry.setCategory(Category.valueOf(request.getCategory().toUpperCase()));
+        } catch (Exception e) {
+            entry.setCategory(Category.OTHER);
         }
 
-        entry.setCategory(
-                Category.valueOf(request.getCategory().toUpperCase()));
         entry.setNotes(request.getNotes());
         entry.setUpdatedAt(LocalDateTime.now());
 
@@ -155,8 +169,7 @@ public class VaultServiceImpl implements VaultService {
                 .findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Category categoryEnum =
-                Category.valueOf(category.toUpperCase());
+        Category categoryEnum = Category.valueOf(category.toUpperCase());
 
         return passwordEntryRepository
                 .findByUserIdAndCategory(user.getId(), categoryEnum)
@@ -196,16 +209,13 @@ public class VaultServiceImpl implements VaultService {
 
         switch (sortBy.toLowerCase()){
             case "name":
-                entries.sort(
-                        Comparator.comparing(PasswordEntry::getAccountName));
+                entries.sort(Comparator.comparing(PasswordEntry::getAccountName));
                 break;
             case "created":
-                entries.sort(
-                        Comparator.comparing(PasswordEntry::getCreatedAt));
+                entries.sort(Comparator.comparing(PasswordEntry::getCreatedAt));
                 break;
             case "updated":
-                entries.sort(
-                        Comparator.comparing(PasswordEntry::getUpdatedAt));
+                entries.sort(Comparator.comparing(PasswordEntry::getUpdatedAt));
                 break;
             default:
                 throw new RuntimeException("Invalid sort option");
@@ -258,19 +268,20 @@ public class VaultServiceImpl implements VaultService {
                 .findByUserId(user.getId())
                 .stream()
                 .filter(entry ->
-                        entry.getUpdatedAt().isBefore(ninetyDaysAgo))
+                        entry.getUpdatedAt() != null &&
+                                entry.getUpdatedAt().isBefore(ninetyDaysAgo))
                 .map(PasswordMapper::toDTO)
                 .toList();
     }
 
-    // ================= EXPORT VAULT (ENCRYPTED ONLY) =================
+    // ================= EXPORT (ENCRYPTED ONLY) =================
 
     @Override
     public List<PasswordEntryDTO> exportVault(String usernameOrEmail){
-        return getAll(usernameOrEmail); // encrypted passwords only
+        return getAll(usernameOrEmail);
     }
 
-    // ================= IMPORT VAULT =================
+    // ================= IMPORT =================
 
     @Override
     public String importVault(String usernameOrEmail,
