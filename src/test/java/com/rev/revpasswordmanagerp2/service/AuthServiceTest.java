@@ -29,7 +29,7 @@ class AuthServiceTest {
     private SecurityQuestionRepository securityQuestionRepository;
 
     @InjectMocks
-    private AuthService authService;
+    private AuthServiceImpl authService;
 
     @BeforeEach
     void setUp() {

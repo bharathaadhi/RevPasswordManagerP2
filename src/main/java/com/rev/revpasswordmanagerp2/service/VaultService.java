@@ -22,7 +22,7 @@ public interface VaultService {
 
     String favorite(Long id, boolean value);
 
-    List<PasswordEntryDTO> favorites(String usernameOrEmail);
+    List<PasswordEntryDTO> getFavorites(String usernameOrEmail);
 
     // ================= SEARCH / FILTER / SORT =================
 
@@ -35,6 +35,10 @@ public interface VaultService {
     // ================= VIEW WITH MASTER PASSWORD =================
 
     PasswordEntryDTO viewWithVerification(ViewPasswordRequest request);
+
+    // ================= OLD PASSWORDS =================
+
+    List<PasswordEntryDTO> getOldPasswords(String usernameOrEmail);
 
     // ================= IMPORT / EXPORT =================
 

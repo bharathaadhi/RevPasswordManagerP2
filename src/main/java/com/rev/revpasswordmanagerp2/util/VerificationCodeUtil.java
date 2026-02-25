@@ -11,9 +11,8 @@ public class VerificationCodeUtil {
     }
 
     public static LocalDateTime generateExpiryTime() {
-        return LocalDateTime.now().plusMinutes(2);
+        return LocalDateTime.now().plusMinutes(5);
     }
-
     public static boolean isExpired(LocalDateTime expiryTime) {
         return LocalDateTime.now().isAfter(expiryTime);
     }

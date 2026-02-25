@@ -19,7 +19,7 @@ class AuditServiceTest {
     private PasswordHistoryRepository passwordHistoryRepository;
 
     @InjectMocks
-    private AuditService auditService;
+    private AuditServiceImpl auditService;
 
     @BeforeEach
     void setUp() {

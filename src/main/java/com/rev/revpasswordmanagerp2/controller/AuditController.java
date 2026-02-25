@@ -19,57 +19,42 @@ public class AuditController {
     private final AuditService auditService;
     private final UserRepository userRepository;
 
-    @GetMapping("/report/{userId}")
-    public ResponseEntity<?> getSecurityReport(@PathVariable Long userId) {
+    @GetMapping("/report")
+    public ResponseEntity<?> getSecurityReport(@RequestParam String usernameOrEmail) {
 
-        User user = userRepository.findById(userId)
+        User user = userRepository
+                .findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Map<String, Object> report = auditService.generateSecurityReport(user);
+        Map<String, Object> report =
+                auditService.generateSecurityReport(user);
 
         return ResponseEntity.ok(report);
     }
 
-    @GetMapping("/weak/{userId}")
-    public ResponseEntity<?> getWeakPasswords(@PathVariable Long userId) {
-        User user = userRepository.findById(userId)
+    @GetMapping("/weak")
+    public ResponseEntity<?> getWeakPasswords(@RequestParam String usernameOrEmail) {
+
+        User user = userRepository
+                .findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        List<PasswordEntryAuditDTO> weakPasswords = auditService.getWeakPasswords(user);
-        if (weakPasswords.isEmpty()) {
-            return ResponseEntity.ok(
-                    Map.of(
-                            "message", "No weak passwords found",
-                            "data", weakPasswords
-                    )
-            );
-        }
-        return ResponseEntity.ok(
-                Map.of(
-                        "message", "Weak passwords found",
-                        "data", weakPasswords
-                )
-        );
+
+        List<PasswordEntryAuditDTO> weakPasswords =
+                auditService.getWeakPasswords(user);
+
+        return ResponseEntity.ok(weakPasswords);
     }
 
-    @GetMapping("/reused/{userId}")
-    public ResponseEntity<?> getReusedPasswords(@PathVariable Long userId) {
-        User user = userRepository.findById(userId)
+    @GetMapping("/reused")
+    public ResponseEntity<?> getReusedPasswords(@RequestParam String usernameOrEmail) {
+
+        User user = userRepository
+                .findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
         List<PasswordEntryAuditDTO> reusedPasswords =
                 auditService.getReusedPasswords(user);
-        if (reusedPasswords.isEmpty()) {
-            return ResponseEntity.ok(
-                    Map.of(
-                            "message", "No reused passwords found",
-                            "data", reusedPasswords
-                    )
-            );
-        }
-        return ResponseEntity.ok(
-                Map.of(
-                        "message", "Reused passwords found",
-                        "data", reusedPasswords
-                )
-        );
+
+        return ResponseEntity.ok(reusedPasswords);
     }
 }

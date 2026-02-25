@@ -5,6 +5,10 @@ import java.util.List;
 public record DashboardResponse(
         long totalPasswords,
         long weakPasswords,
-        String message,
-        List<PasswordEntryDTO> recentEntries
+        long reusedPasswords,
+        long oldPasswords,
+        int securityScore,
+        String alertMessage,
+        List<PasswordEntryDTO> recentEntries,
+        List<PasswordEntryDTO> favoritePasswords
 ) {}

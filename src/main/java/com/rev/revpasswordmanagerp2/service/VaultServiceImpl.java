@@ -47,18 +47,14 @@ public class VaultServiceImpl implements VaultService {
         entry.setWebsiteUrl(request.getWebsite());
         entry.setAccountUsername(request.getUsername());
 
-        // ✅ SAFE PASSWORD (avoid NULL crash during import)
         String safePassword = (request.getPassword() == null || request.getPassword().isEmpty())
-                ? "TEMP123!"   // fallback password for imported entries
+                ? "TEMP123!"
                 : request.getPassword();
 
-        entry.setEncryptedPassword(
-                encryptionUtil.encrypt(safePassword));
+        entry.setEncryptedPassword(encryptionUtil.encrypt(safePassword));
 
-        // ✅ SAFE CATEGORY (avoid enum crash)
         try {
-            entry.setCategory(
-                    Category.valueOf(request.getCategory().toUpperCase()));
+            entry.setCategory(Category.valueOf(request.getCategory().toUpperCase()));
         } catch (Exception e) {
             entry.setCategory(Category.OTHER);
         }
@@ -66,6 +62,7 @@ public class VaultServiceImpl implements VaultService {
         entry.setNotes(request.getNotes());
         entry.setFavorite(false);
         entry.setCreatedAt(LocalDateTime.now());
+        entry.setUpdatedAt(LocalDateTime.now());
         entry.setUser(user);
 
         passwordEntryRepository.save(entry);
@@ -92,7 +89,7 @@ public class VaultServiceImpl implements VaultService {
     // ================= FAVORITES =================
 
     @Override
-    public List<PasswordEntryDTO> favorites(String usernameOrEmail){
+    public List<PasswordEntryDTO> getFavorites(String usernameOrEmail){
 
         User user = userRepository
                 .findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
@@ -122,6 +119,9 @@ public class VaultServiceImpl implements VaultService {
     @Override
     public String delete(Long id) {
 
+        if(!passwordEntryRepository.existsById(id)){
+            throw new RuntimeException("Password not found");
+        }
         passwordEntryRepository.deleteById(id);
         return "Password Deleted";
     }
@@ -142,16 +142,15 @@ public class VaultServiceImpl implements VaultService {
                 ? encryptionUtil.decrypt(entry.getEncryptedPassword())
                 : request.getPassword();
 
-        entry.setEncryptedPassword(
-                encryptionUtil.encrypt(safePassword));
+        entry.setEncryptedPassword(encryptionUtil.encrypt(safePassword));
 
         try {
-            entry.setCategory(
-                    Category.valueOf(request.getCategory().toUpperCase()));
+            entry.setCategory(Category.valueOf(request.getCategory().toUpperCase()));
         } catch (Exception e) {
             entry.setCategory(Category.OTHER);
         }
 
+        entry.setNotes(request.getNotes());
         entry.setUpdatedAt(LocalDateTime.now());
 
         passwordEntryRepository.save(entry);
@@ -243,8 +242,7 @@ public class VaultServiceImpl implements VaultService {
             throw new RuntimeException("Invalid master password");
         }
 
-        PasswordEntryDTO dto =
-                PasswordMapper.toDTO(entry);
+        PasswordEntryDTO dto = PasswordMapper.toDTO(entry);
 
         dto.setDecryptedPassword(
                 encryptionUtil.decrypt(entry.getEncryptedPassword()));
@@ -252,11 +250,31 @@ public class VaultServiceImpl implements VaultService {
         return dto;
     }
 
+    // ================= OLD PASSWORDS =================
+
+    @Override
+    public List<PasswordEntryDTO> getOldPasswords(String usernameOrEmail){
+
+        User user = userRepository
+                .findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        LocalDateTime ninetyDaysAgo = LocalDateTime.now().minusDays(90);
+
+        return passwordEntryRepository
+                .findByUserId(user.getId())
+                .stream()
+                .filter(entry ->
+                        entry.getUpdatedAt() != null &&
+                                entry.getUpdatedAt().isBefore(ninetyDaysAgo))
+                .map(PasswordMapper::toDTO)
+                .toList();
+    }
+
     // ================= EXPORT =================
 
     @Override
     public List<PasswordEntryDTO> exportVault(String usernameOrEmail){
-
         return getAll(usernameOrEmail);
     }
 
