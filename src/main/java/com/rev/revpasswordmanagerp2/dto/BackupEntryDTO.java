@@ -5,15 +5,15 @@ import lombok.Data;
 
 @Data
 @Builder
-public class PasswordEntryDTO {
+public class BackupEntryDTO {
 
     private Long id;
     private String accountName;
     private String website;
     private String username;
     private String category;
-    private String encryptedPassword;
     private boolean favorite;
+    private String encryptedPassword;
     private String createdAt;
     private String updatedAt;
 }

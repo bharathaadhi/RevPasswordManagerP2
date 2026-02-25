@@ -47,7 +47,7 @@ public class DashboardServiceImpl implements DashboardService {
 
         List<PasswordEntryDTO> favorites =
                 allEntries.stream()
-                        .filter(PasswordEntry::getFavorite)
+                        .filter(p -> Boolean.TRUE.equals(p.getFavorite()))
                         .limit(5)
                         .map(PasswordMapper::toDTO)
                         .toList();

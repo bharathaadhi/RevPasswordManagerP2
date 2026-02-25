@@ -3,6 +3,7 @@ package com.rev.revpasswordmanagerp2.service;
 import com.rev.revpasswordmanagerp2.dto.PasswordEntryDTO;
 import com.rev.revpasswordmanagerp2.dto.VaultRequest;
 import com.rev.revpasswordmanagerp2.dto.ViewPasswordRequest;
+import com.rev.revpasswordmanagerp2.dto.ViewPasswordResponseDTO;
 import com.rev.revpasswordmanagerp2.model.Category;
 import com.rev.revpasswordmanagerp2.model.PasswordEntry;
 import com.rev.revpasswordmanagerp2.model.User;
@@ -113,6 +114,7 @@ public class VaultServiceImpl implements VaultService {
         if(!passwordEntryRepository.existsById(id)){
             throw new RuntimeException("Password not found");
         }
+
         passwordEntryRepository.deleteById(id);
         return "Password Deleted";
     }
@@ -128,10 +130,12 @@ public class VaultServiceImpl implements VaultService {
         entry.setAccountName(request.getAccountName());
         entry.setWebsiteUrl(request.getWebsite());
         entry.setAccountUsername(request.getUsername());
+
         if (request.getPassword() != null && !request.getPassword().isEmpty()) {
             entry.setEncryptedPassword(
                     encryptionUtil.encrypt(request.getPassword()));
         }
+
         entry.setCategory(
                 Category.valueOf(request.getCategory().toUpperCase()));
         entry.setNotes(request.getNotes());
@@ -215,7 +219,7 @@ public class VaultServiceImpl implements VaultService {
     // ================= VIEW WITH MASTER PASSWORD =================
 
     @Override
-    public PasswordEntryDTO viewWithVerification(ViewPasswordRequest request){
+    public ViewPasswordResponseDTO viewWithVerification(ViewPasswordRequest request){
 
         PasswordEntry entry = passwordEntryRepository
                 .findById(request.getEntryId())
@@ -230,16 +234,17 @@ public class VaultServiceImpl implements VaultService {
             throw new RuntimeException("Invalid master password");
         }
 
-        PasswordEntryDTO dto =
-                PasswordMapper.toDTO(entry);
+        String decrypted =
+                encryptionUtil.decrypt(entry.getEncryptedPassword());
 
-        dto.setDecryptedPassword(
-                encryptionUtil.decrypt(entry.getEncryptedPassword()));
-
-        return dto;
+        return ViewPasswordResponseDTO.builder()
+                .id(entry.getId())
+                .decryptedPassword(decrypted)
+                .build();
     }
 
-    // ================= OLD PASSWORD =================
+    // ================= OLD PASSWORDS =================
+
     @Override
     public List<PasswordEntryDTO> getOldPasswords(String usernameOrEmail){
 
@@ -258,12 +263,11 @@ public class VaultServiceImpl implements VaultService {
                 .toList();
     }
 
-    // ================= EXPORT VAULT =================
+    // ================= EXPORT VAULT (ENCRYPTED ONLY) =================
 
     @Override
     public List<PasswordEntryDTO> exportVault(String usernameOrEmail){
-
-        return getAll(usernameOrEmail);
+        return getAll(usernameOrEmail); // encrypted passwords only
     }
 
     // ================= IMPORT VAULT =================

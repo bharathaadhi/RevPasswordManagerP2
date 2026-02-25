@@ -14,6 +14,7 @@ public class PasswordMapper {
                 .username(entry.getAccountUsername())
                 .category(entry.getCategory().name())
                 .favorite(entry.getFavorite())
+                .encryptedPassword(entry.getEncryptedPassword())
                 .createdAt(entry.getCreatedAt() != null ?
                         entry.getCreatedAt().toString() : null)
                 .updatedAt(entry.getUpdatedAt() != null ?

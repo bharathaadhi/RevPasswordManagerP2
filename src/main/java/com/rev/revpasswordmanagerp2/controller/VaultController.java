@@ -3,6 +3,7 @@ package com.rev.revpasswordmanagerp2.controller;
 import com.rev.revpasswordmanagerp2.dto.PasswordEntryDTO;
 import com.rev.revpasswordmanagerp2.dto.VaultRequest;
 import com.rev.revpasswordmanagerp2.dto.ViewPasswordRequest;
+import com.rev.revpasswordmanagerp2.dto.ViewPasswordResponseDTO;
 import com.rev.revpasswordmanagerp2.service.VaultService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -62,7 +63,7 @@ public class VaultController {
     @PatchMapping("/{id}/favorite")
     public String favorite(@PathVariable Long id,
                            @RequestParam boolean value){
-        return vaultService.favorite(id,value);
+        return vaultService.favorite(id, value);
     }
 
     // ================= GET FAVORITES =================
@@ -85,7 +86,7 @@ public class VaultController {
     // ================= VIEW WITH MASTER PASSWORD =================
 
     @PostMapping("/view")
-    public PasswordEntryDTO view(
+    public ViewPasswordResponseDTO view(
             @RequestBody ViewPasswordRequest request){
         return vaultService.viewWithVerification(request);
     }
@@ -122,5 +123,4 @@ public class VaultController {
             @RequestParam String usernameOrEmail){
         return vaultService.getOldPasswords(usernameOrEmail);
     }
-
 }

@@ -3,6 +3,7 @@ package com.rev.revpasswordmanagerp2.service;
 import com.rev.revpasswordmanagerp2.dto.PasswordEntryDTO;
 import com.rev.revpasswordmanagerp2.dto.VaultRequest;
 import com.rev.revpasswordmanagerp2.dto.ViewPasswordRequest;
+import com.rev.revpasswordmanagerp2.dto.ViewPasswordResponseDTO;
 
 import java.util.List;
 
@@ -28,13 +29,13 @@ public interface VaultService {
 
     List<PasswordEntryDTO> filter(String usernameOrEmail, String category);
 
-    List<PasswordEntryDTO> search(String usernameOrEmail,String keyword);
+    List<PasswordEntryDTO> search(String usernameOrEmail, String keyword);
 
     List<PasswordEntryDTO> sort(String usernameOrEmail, String sortBy);
 
     // ================= VIEW WITH MASTER PASSWORD =================
 
-    PasswordEntryDTO viewWithVerification(ViewPasswordRequest request);
+    ViewPasswordResponseDTO viewWithVerification(ViewPasswordRequest request);
 
     // ================= OLD PASSWORDS =================
 
@@ -45,5 +46,4 @@ public interface VaultService {
     List<PasswordEntryDTO> exportVault(String usernameOrEmail);
 
     String importVault(String usernameOrEmail, List<VaultRequest> requests);
-
 }
