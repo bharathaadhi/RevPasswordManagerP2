@@ -33,7 +33,7 @@ public class SecurityServiceImpl implements SecurityService {
 
     private static final String SIMILAR = "O0l1I";
 
-    // PASSWORD GENERATE
+
     @Override
     public String generatePassword(int length, boolean upper, boolean lower,
                                    boolean number, boolean special, boolean excludeSimilar) {
@@ -66,7 +66,7 @@ public class SecurityServiceImpl implements SecurityService {
         return password.toString();
     }
 
-    // MULTIPLE PASSWORDS
+
     @Override
     public List<String> generateMultiplePasswords(int count, int length,
                                                   boolean upper, boolean lower,
@@ -82,13 +82,13 @@ public class SecurityServiceImpl implements SecurityService {
         return list;
     }
 
-    // PASSWORD STRENGTH
+
     @Override
     public String checkStrength(String password) {
         return PasswordStrengthUtil.checkStrength(password);
     }
 
-    // CHANGE MASTER PASSWORD
+
     @Override
     public String changeMasterPassword(ChangePasswordRequest request) {
 
@@ -126,7 +126,7 @@ public class SecurityServiceImpl implements SecurityService {
         return enabled ? "2FA Enabled" : "2FA Disabled";
     }
 
-    // MASTER PASSWORD CHECK
+
     @Override
     public boolean validateMasterPassword(String raw, String encoded) {
         return passwordEncoder.matches(raw, encoded);

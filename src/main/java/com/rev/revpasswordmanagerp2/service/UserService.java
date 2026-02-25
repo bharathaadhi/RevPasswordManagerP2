@@ -5,13 +5,12 @@ import com.rev.revpasswordmanagerp2.model.User;
 
 public interface UserService {
 
-    // ================= AUTH =================
 
     User register(RegisterRequest request);
 
     String login(LoginRequest request);
 
-    // ================= PROFILE =================
+
 
     String updateProfile(UpdateProfileRequest request);
 

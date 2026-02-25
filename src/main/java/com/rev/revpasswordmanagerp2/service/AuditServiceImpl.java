@@ -23,7 +23,7 @@ public class AuditServiceImpl implements AuditService {
     private final PasswordHistoryRepository passwordHistoryRepository;
     private final EncryptionUtil encryptionUtil;
 
-    // Detect weak passwords
+
     @Override
     public List<PasswordEntryAuditDTO> getWeakPasswords(User user) {
 
@@ -48,7 +48,6 @@ public class AuditServiceImpl implements AuditService {
                 .collect(Collectors.toList());
     }
 
-    // Detect reused passwords
     @Override
     public List<PasswordEntryAuditDTO> getReusedPasswords(User user) {
 
@@ -73,7 +72,7 @@ public class AuditServiceImpl implements AuditService {
                 .collect(Collectors.toList());
     }
 
-    // Generate audit summary
+
     @Override
     public Map<String, Object> generateSecurityReport(User user) {
 

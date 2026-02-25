@@ -15,7 +15,6 @@ public class ProfileController {
 
     private final UserService userService;
 
-    // ================= UPDATE PROFILE =================
 
     @PutMapping("/update")
     public ResponseEntity<String> updateProfile(
@@ -25,7 +24,7 @@ public class ProfileController {
                 userService.updateProfile(request));
     }
 
-    // ================= CHANGE MASTER PASSWORD =================
+
 
     @PutMapping("/change-master-password")
     public ResponseEntity<String> changeMasterPassword(
@@ -35,7 +34,7 @@ public class ProfileController {
                 userService.changeMasterPassword(request));
     }
 
-    // ================= UPDATE SECURITY QUESTIONS =================
+
 
     @PutMapping("/security-questions")
     public ResponseEntity<String> updateSecurityQuestions(

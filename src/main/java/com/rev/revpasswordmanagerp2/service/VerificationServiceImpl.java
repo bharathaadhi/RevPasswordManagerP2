@@ -35,7 +35,7 @@ public class VerificationServiceImpl implements VerificationService {
 
         verificationCodeRepository.save(verificationCode);
 
-        // Simulated email
+
         System.out.println("Verification Code for " + user.getEmail() + ": " + code);
 
         return "Verification code sent (simulated)";

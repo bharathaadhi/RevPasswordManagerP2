@@ -31,7 +31,6 @@ public class VaultServiceImpl implements VaultService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    // ================= ADD PASSWORD =================
 
     @Override
     public String addPassword(VaultRequest request) {
@@ -71,7 +70,7 @@ public class VaultServiceImpl implements VaultService {
         return "Password Added Successfully";
     }
 
-    // ================= GET ALL =================
+
 
     @Override
     public List<PasswordEntryDTO> getAll(String usernameOrEmail) {
@@ -87,7 +86,6 @@ public class VaultServiceImpl implements VaultService {
                 .toList();
     }
 
-    // ================= FAVORITES =================
 
     @Override
     public List<PasswordEntryDTO> getFavorites(String usernameOrEmail){
@@ -115,7 +113,7 @@ public class VaultServiceImpl implements VaultService {
         return "Favorite Updated";
     }
 
-    // ================= DELETE =================
+
 
     @Override
     public String delete(Long id) {
@@ -128,7 +126,7 @@ public class VaultServiceImpl implements VaultService {
         return "Password Deleted";
     }
 
-    // ================= UPDATE =================
+
 
     @Override
     public String update(Long id, VaultRequest request) {
@@ -160,7 +158,6 @@ public class VaultServiceImpl implements VaultService {
         return "Password Updated Successfully";
     }
 
-    // ================= FILTER =================
 
     @Override
     public List<PasswordEntryDTO> filter(String usernameOrEmail, String category){
@@ -178,7 +175,7 @@ public class VaultServiceImpl implements VaultService {
                 .toList();
     }
 
-    // ================= SEARCH =================
+
 
     @Override
     public List<PasswordEntryDTO> search(String usernameOrEmail,String keyword){
@@ -195,7 +192,7 @@ public class VaultServiceImpl implements VaultService {
                 .toList();
     }
 
-    // ================= SORT =================
+
 
     @Override
     public List<PasswordEntryDTO> sort(String usernameOrEmail, String sortBy){
@@ -226,7 +223,7 @@ public class VaultServiceImpl implements VaultService {
                 .toList();
     }
 
-    // ================= VIEW WITH MASTER PASSWORD =================
+
 
     @Override
     public ViewPasswordResponseDTO viewWithVerification(ViewPasswordRequest request){
@@ -253,7 +250,6 @@ public class VaultServiceImpl implements VaultService {
                 .build();
     }
 
-    // ================= OLD PASSWORDS =================
 
     @Override
     public List<PasswordEntryDTO> getOldPasswords(String usernameOrEmail){
@@ -274,14 +270,12 @@ public class VaultServiceImpl implements VaultService {
                 .toList();
     }
 
-    // ================= EXPORT (ENCRYPTED ONLY) =================
 
     @Override
     public List<PasswordEntryDTO> exportVault(String usernameOrEmail){
         return getAll(usernameOrEmail);
     }
 
-    // ================= IMPORT =================
 
     @Override
     public String importVault(String usernameOrEmail,

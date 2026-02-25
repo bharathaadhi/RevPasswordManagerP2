@@ -19,7 +19,7 @@ public class UserServiceImpl implements UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    // ================= REGISTER =================
+
 
     @Override
     public User register(RegisterRequest request) {
@@ -44,7 +44,7 @@ public class UserServiceImpl implements UserService {
         return userRepository.save(user);
     }
 
-    // ================= LOGIN =================
+
 
     @Override
     public String login(LoginRequest request) {
@@ -66,7 +66,7 @@ public class UserServiceImpl implements UserService {
         return "Login Successful";
     }
 
-    // ================= UPDATE PROFILE =================
+
 
     @Override
     public String updateProfile(UpdateProfileRequest request){
@@ -97,7 +97,7 @@ public class UserServiceImpl implements UserService {
 
 
 
-    // ================= CHANGE MASTER PASSWORD =================
+
 
     @Override
     public String changeMasterPassword(ChangePasswordRequest request){
@@ -124,7 +124,6 @@ public class UserServiceImpl implements UserService {
         return "Master Password Updated Successfully";
     }
 
-    // ================= UPDATE SECURITY QUESTIONS =================
 
     @Override
     public String updateSecurityQuestions(UpdateSecurityAnswerRequest request){
