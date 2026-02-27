@@ -1,12 +1,10 @@
 package com.rev.revpasswordmanagerp2.service;
 
-import com.rev.revpasswordmanagerp2.dto.PasswordEntryDTO;
-import com.rev.revpasswordmanagerp2.dto.VaultRequest;
-import com.rev.revpasswordmanagerp2.dto.ViewPasswordRequest;
-import com.rev.revpasswordmanagerp2.dto.ViewPasswordResponseDTO;
+import com.rev.revpasswordmanagerp2.dto.*;
 import com.rev.revpasswordmanagerp2.model.Category;
 import com.rev.revpasswordmanagerp2.model.PasswordEntry;
 import com.rev.revpasswordmanagerp2.model.User;
+import com.rev.revpasswordmanagerp2.model.VerificationCode;
 import com.rev.revpasswordmanagerp2.repository.PasswordEntryRepository;
 import com.rev.revpasswordmanagerp2.repository.UserRepository;
 import com.rev.revpasswordmanagerp2.util.EncryptionUtil;
@@ -15,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -27,6 +26,7 @@ public class VaultServiceImpl implements VaultService {
     private final PasswordEntryRepository passwordEntryRepository;
     private final UserRepository userRepository;
     private final EncryptionUtil encryptionUtil;
+    private final VerificationService verificationService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -97,8 +97,9 @@ public class VaultServiceImpl implements VaultService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         return passwordEntryRepository
-                .findByUserIdAndFavoriteTrue(user.getId())
+                .findByUserId(user.getId())
                 .stream()
+                .filter(entry -> Boolean.TRUE.equals(entry.getFavorite()))
                 .map(PasswordMapper::toDTO)
                 .toList();
     }
@@ -116,16 +117,66 @@ public class VaultServiceImpl implements VaultService {
     }
 
     // ================= DELETE =================
-
     @Override
-    public String delete(Long id) {
+    public String delete(DeletePasswordRequest request) {
 
-        if(!passwordEntryRepository.existsById(id)){
-            throw new RuntimeException("Password not found");
+        // ===== VALIDATION =====
+        if (request.getEntryId() == null)
+            throw new RuntimeException("Entry ID missing");
+
+        if (request.getUsernameOrEmail() == null)
+            throw new RuntimeException("User missing");
+
+        if (request.getMasterPassword() == null)
+            throw new RuntimeException("Master password missing");
+
+        if (request.getVerificationCode() == null)
+            throw new RuntimeException("Verification code missing");
+
+
+        // ===== FIND PASSWORD ENTRY =====
+        PasswordEntry entry = passwordEntryRepository
+                .findById(request.getEntryId())
+                .orElseThrow(() ->
+                        new RuntimeException("Password entry not found"));
+
+
+        // ===== FIND USER =====
+        User user = userRepository
+                .findByUsernameOrEmail(
+                        request.getUsernameOrEmail(),
+                        request.getUsernameOrEmail())
+                .orElseThrow(() ->
+                        new RuntimeException("User not found"));
+
+
+        // ===== VERIFY MASTER PASSWORD =====
+        if (!passwordEncoder.matches(
+                request.getMasterPassword(),
+                user.getMasterPasswordHash())) {
+
+            throw new RuntimeException("Invalid master password");
         }
 
-        passwordEntryRepository.deleteById(id);
-        return "Password Deleted";
+
+        // ===== VERIFY OTP USING SERVICE =====
+        try {
+
+            verificationService.validateCode(
+                    request.getUsernameOrEmail(),
+                    request.getVerificationCode()
+            );
+
+        } catch (Exception e) {
+
+            throw new RuntimeException("OTP Invalid or Expired");
+
+        }
+
+        // ===== DELETE =====
+        passwordEntryRepository.delete(entry);
+
+        return "Password deleted successfully";
     }
 
     // ================= UPDATE =================
@@ -237,6 +288,7 @@ public class VaultServiceImpl implements VaultService {
 
         User user = entry.getUser();
 
+        // Validate master password
         if(!passwordEncoder.matches(
                 request.getMasterPassword(),
                 user.getMasterPasswordHash())){
@@ -244,6 +296,13 @@ public class VaultServiceImpl implements VaultService {
             throw new RuntimeException("Invalid master password");
         }
 
+        // Validate verification code
+        verificationService.validateCode(
+                request.getUsernameOrEmail(),
+                request.getVerificationCode()
+        );
+
+        // Decrypt password
         String decrypted =
                 encryptionUtil.decrypt(entry.getEncryptedPassword());
 
@@ -274,24 +333,90 @@ public class VaultServiceImpl implements VaultService {
                 .toList();
     }
 
-    // ================= EXPORT (ENCRYPTED ONLY) =================
-
+    // ================= EXPORT  =================
     @Override
-    public List<PasswordEntryDTO> exportVault(String usernameOrEmail){
-        return getAll(usernameOrEmail);
+    public List<VaultExportDTO> exportVault(
+            ExportVaultRequest request) {
+
+        User user = userRepository
+                .findByUsernameOrEmail(
+                        request.getUsernameOrEmail(),
+                        request.getUsernameOrEmail())
+                .orElseThrow(() ->
+                        new RuntimeException("User not found"));
+
+        // master password validation
+        if (!passwordEncoder.matches(
+                request.getMasterPassword(),
+                user.getMasterPasswordHash())) {
+
+            throw new RuntimeException("Invalid master password");
+        }
+
+        verificationService.validateCode(
+                request.getUsernameOrEmail(),
+                request.getVerificationCode()
+        );
+
+        List<PasswordEntry> entries =
+                passwordEntryRepository.findByUserId(user.getId());
+
+        return entries.stream()
+                .map(entry -> new VaultExportDTO(
+                        entry.getAccountName(),
+                        entry.getWebsiteUrl(),
+                        entry.getAccountUsername(),
+                        encryptionUtil.decrypt(
+                                entry.getEncryptedPassword()
+                        ),
+                        entry.getCategory().name(),
+                        entry.getNotes()
+                ))
+                .toList();
     }
 
     // ================= IMPORT =================
 
     @Override
-    public String importVault(String usernameOrEmail,
-                              List<VaultRequest> requests){
+    public void importVault(
+            ImportVaultRequest request) {
 
-        for(VaultRequest request : requests){
-            request.setUsernameOrEmail(usernameOrEmail);
-            addPassword(request);
+        User user = userRepository
+                .findByUsernameOrEmail(
+                        request.getUsernameOrEmail(),
+                        request.getUsernameOrEmail())
+                .orElseThrow(() ->
+                        new RuntimeException("User not found"));
+
+        verificationService.validateCode(
+                request.getUsernameOrEmail(),
+                request.getVerificationCode()
+        );
+
+        for (VaultExportDTO dto : request.getVaultData()) {
+
+            PasswordEntry entry = new PasswordEntry();
+
+            entry.setUser(user);
+            entry.setAccountName(dto.getAccountName());
+            entry.setWebsiteUrl(dto.getWebsite());
+            entry.setAccountUsername(dto.getUsername());
+
+            // CORRECT ENCRYPTION
+            entry.setEncryptedPassword(
+                    encryptionUtil.encrypt(dto.getPassword())
+            );
+
+            entry.setCategory(
+                    Category.valueOf(dto.getCategory())
+            );
+
+            entry.setNotes(dto.getNotes());
+            entry.setFavorite(false);
+            entry.setCreatedAt(LocalDateTime.now());
+            entry.setUpdatedAt(LocalDateTime.now());
+
+            passwordEntryRepository.save(entry);
         }
-
-        return "Import Successful";
     }
 }

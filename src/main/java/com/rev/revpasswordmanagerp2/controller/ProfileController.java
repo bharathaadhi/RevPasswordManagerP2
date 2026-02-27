@@ -18,7 +18,7 @@ public class ProfileController {
     // ================= UPDATE PROFILE =================
 
     @PutMapping("/update")
-    public ResponseEntity<String> updateProfile(
+    public ResponseEntity<?> updateProfile(
             @RequestBody UpdateProfileRequest request){
 
         return ResponseEntity.ok(

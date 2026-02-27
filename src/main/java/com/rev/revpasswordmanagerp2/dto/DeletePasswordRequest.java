@@ -3,9 +3,10 @@ package com.rev.revpasswordmanagerp2.dto;
 import lombok.Data;
 
 @Data
-public class ViewPasswordRequest {
+public class DeletePasswordRequest {
+
     private Long entryId;
-    private String masterPassword;
     private String usernameOrEmail;
+    private String masterPassword;
     private String verificationCode;
 }

@@ -1,8 +1,9 @@
 package com.rev.revpasswordmanagerp2.model;
 
+import com.rev.revpasswordmanagerp2.model.User;
 import jakarta.persistence.*;
 import lombok.*;
-
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Entity
 @Table(name = "security_questions")
@@ -27,10 +28,8 @@ public class SecurityQuestion {
     @Column(nullable = false)
     private String answerHash;
 
-    public void setAnswer(String answer) {
-    }
-
-    public String getAnswer() {
-        return "";
+    // store encoded answer
+    public void setAnswer(String answer, PasswordEncoder encoder) {
+        this.answerHash = encoder.encode(answer);
     }
 }

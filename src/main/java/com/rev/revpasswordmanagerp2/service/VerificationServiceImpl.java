@@ -1,5 +1,6 @@
 package com.rev.revpasswordmanagerp2.service;
 
+import com.rev.revpasswordmanagerp2.dto.VerificationResponseDTO;
 import com.rev.revpasswordmanagerp2.model.User;
 import com.rev.revpasswordmanagerp2.model.VerificationCode;
 import com.rev.revpasswordmanagerp2.repository.UserRepository;
@@ -18,7 +19,7 @@ public class VerificationServiceImpl implements VerificationService {
     private final VerificationCodeRepository verificationCodeRepository;
 
     @Override
-    public String generateCode(String usernameOrEmail) {
+    public VerificationResponseDTO generateCode(String usernameOrEmail) {
 
         User user = userRepository
                 .findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
@@ -26,19 +27,21 @@ public class VerificationServiceImpl implements VerificationService {
 
         String code = VerificationCodeUtil.generateCode();
 
-        VerificationCode verificationCode = new VerificationCode();
-        verificationCode.setUserId(user.getId());
-        verificationCode.setCode(code);
-        verificationCode.setCreatedTime(LocalDateTime.now());
-        verificationCode.setExpiryTime(LocalDateTime.now().plusMinutes(5));
-        verificationCode.setUsed(false);
+        VerificationCode vc = VerificationCode.builder()
+                .userId(user.getId())
+                .code(code)
+                .createdTime(LocalDateTime.now())
+                .expiryTime(LocalDateTime.now().plusMinutes(5))
+                .used(false)
+                .build();
 
-        verificationCodeRepository.save(verificationCode);
+        verificationCodeRepository.save(vc);
 
-        // Simulated email
-        System.out.println("Verification Code for " + user.getEmail() + ": " + code);
-
-        return "Verification code sent (simulated)";
+        return VerificationResponseDTO.builder()
+                .message("Verification code sent")
+                .email(user.getEmail())
+                .code(code)
+                .build();
     }
 
     @Override

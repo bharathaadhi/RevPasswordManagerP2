@@ -1,13 +1,16 @@
 package com.rev.revpasswordmanagerp2.controller;
 
-import com.rev.revpasswordmanagerp2.dto.ChangePasswordRequest;
+import com.rev.revpasswordmanagerp2.dto.*;
+import com.rev.revpasswordmanagerp2.model.SecurityQuestion;
 import com.rev.revpasswordmanagerp2.model.VerificationCode;
 import com.rev.revpasswordmanagerp2.service.SecurityService;
 import com.rev.revpasswordmanagerp2.service.VerificationService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.rev.revpasswordmanagerp2.dto.UpdateAnswersRequest;
 
 import java.util.List;
 
@@ -54,7 +57,9 @@ public class SecurityController {
     }
 
     @PostMapping("/generate-code")
-    public String generateCode(@RequestParam String usernameOrEmail) {
+    public VerificationResponseDTO generateCode(
+            @RequestParam String usernameOrEmail) {
+
         return verificationService.generateCode(usernameOrEmail);
     }
 
@@ -85,29 +90,21 @@ public class SecurityController {
         return securityService.toggleTwoFactor(usernameOrEmail, enabled);
     }
 
-    @Data
-    public static class GeneratorRequest {
-        private int length;
-        private boolean upper;
-        private boolean lower;
-        private boolean number;
-        private boolean special;
-        private boolean excludeSimilar;
+    @GetMapping("/questions")
+    public ResponseEntity<?> getQuestions() {
+        return ResponseEntity.ok(
+                securityService.getAllQuestions()
+        );
     }
 
-    @Data
-    public static class MultipleRequest {
-        private int count;
-        private int length;
-        private boolean upper;
-        private boolean lower;
-        private boolean number;
-        private boolean special;
-        private boolean excludeSimilar;
-    }
+    @PostMapping("/update-answers")
+    public ResponseEntity<?> updateAnswers(
+            @RequestBody UpdateAnswersRequest request) {
 
-    @Data
-    public static class StrengthRequest {
-        private String password;
+        securityService.updateSecurityAnswers(
+                request.getUserId(),
+                request.getAnswers());
+
+        return ResponseEntity.ok("Updated");
     }
 }

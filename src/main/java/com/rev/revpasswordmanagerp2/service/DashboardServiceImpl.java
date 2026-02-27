@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -31,19 +32,29 @@ public class DashboardServiceImpl implements DashboardService {
         List<PasswordEntry> allEntries =
                 passwordEntryRepository.findByUser(user);
 
-        long total = allEntries.size();
-        long weak = auditService.getWeakPasswords(user).size();
-        long reused = auditService.getReusedPasswords(user).size();
-        long old = auditService.getOldPasswords(user).size();
+        int total = allEntries.size();
 
-        int score = 100
-                - (int)(weak * 10)
-                - (int)(reused * 15)
-                - (int)(old * 5);
+        /* ================= REUSE AUDIT REPORT ================= */
 
-        score = Math.max(score, 0);
+        Map<String, Object> auditReport =
+                auditService.generateSecurityReport(user);
 
-        String alert = auditService.securityAlert(user);
+        long weak =
+                ((Number) auditReport.get("weakPasswords")).longValue();
+
+        long reused =
+                ((Number) auditReport.get("reusedPasswords")).longValue();
+
+        long score =
+                ((Number) auditReport.get("securityScore")).longValue();
+
+        String alert =
+                (String) auditReport.get("alertMessage");
+
+        long old =
+                auditService.getOldPasswords(user).size();
+
+        /* ================= FAVORITES ================= */
 
         List<PasswordEntryDTO> favorites =
                 allEntries.stream()
@@ -52,10 +63,13 @@ public class DashboardServiceImpl implements DashboardService {
                         .map(PasswordMapper::toDTO)
                         .toList();
 
+        /* ================= RECENT ================= */
+
         List<PasswordEntryDTO> recent =
                 allEntries.stream()
-                        .sorted(Comparator.comparing(
-                                PasswordEntry::getCreatedAt).reversed())
+                        .sorted(Comparator
+                                .comparing(PasswordEntry::getCreatedAt)
+                                .reversed())
                         .limit(5)
                         .map(PasswordMapper::toDTO)
                         .toList();
@@ -65,7 +79,7 @@ public class DashboardServiceImpl implements DashboardService {
                 weak,
                 reused,
                 old,
-                score,
+                (int) score,
                 alert,
                 recent,
                 favorites

@@ -1,9 +1,14 @@
 package com.rev.revpasswordmanagerp2.service;
 
+import com.rev.revpasswordmanagerp2.dto.AnswerRequest;
 import com.rev.revpasswordmanagerp2.dto.ChangePasswordRequest;
+import com.rev.revpasswordmanagerp2.model.SecurityQuestion;
 import com.rev.revpasswordmanagerp2.model.User;
+import com.rev.revpasswordmanagerp2.model.UserSecurityAnswer;
 import com.rev.revpasswordmanagerp2.model.VerificationCode;
+import com.rev.revpasswordmanagerp2.repository.SecurityQuestionRepository;
 import com.rev.revpasswordmanagerp2.repository.UserRepository;
+import com.rev.revpasswordmanagerp2.repository.UserSecurityAnswerRepository;
 import com.rev.revpasswordmanagerp2.repository.VerificationCodeRepository;
 import com.rev.revpasswordmanagerp2.util.PasswordStrengthUtil;
 import com.rev.revpasswordmanagerp2.util.VerificationCodeUtil;
@@ -15,14 +20,18 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import com.rev.revpasswordmanagerp2.dto.AnswerRequest;
 
 @Service
 @RequiredArgsConstructor
 public class SecurityServiceImpl implements SecurityService {
 
     private final VerificationCodeRepository verificationCodeRepository;
+    private final VerificationService verificationService;
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
+    private final SecurityQuestionRepository securityQuestionRepository;
+    private final UserSecurityAnswerRepository answerRepository;
 
     private SecureRandom random = new SecureRandom();
 
@@ -98,19 +107,28 @@ public class SecurityServiceImpl implements SecurityService {
                         request.getUsernameOrEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        // Validate current master password
         if (!passwordEncoder.matches(
-                request.getOldPassword(),
+                request.getCurrentPassword(),
                 user.getMasterPasswordHash())) {
 
-            throw new RuntimeException("Current password incorrect");
+            throw new RuntimeException("Current master password is incorrect");
         }
 
-        String encoded = passwordEncoder.encode(request.getNewPassword());
+        // Validate verification code
+        verificationService.validateCode(
+                request.getUsernameOrEmail(),
+                request.getVerificationCode()
+        );
 
-        user.setMasterPasswordHash(encoded);
+        // Update master password
+        user.setMasterPasswordHash(
+                passwordEncoder.encode(request.getNewPassword())
+        );
+
         userRepository.save(user);
 
-        return "Master Password Updated Successfully";
+        return "Master password changed successfully";
     }
 
     @Override
@@ -131,4 +149,37 @@ public class SecurityServiceImpl implements SecurityService {
     public boolean validateMasterPassword(String raw, String encoded) {
         return passwordEncoder.matches(raw, encoded);
     }
+
+    @Override
+    public List<SecurityQuestion> getAllQuestions() {
+        return securityQuestionRepository.findAll();
+    }
+
+    @Override
+    public void updateSecurityAnswers(Long userId,
+                                      List<AnswerRequest> answers) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        for (AnswerRequest req : answers) {
+
+            SecurityQuestion question =
+                    securityQuestionRepository
+                            .findById(req.getQuestionId())
+                            .orElseThrow(() ->
+                                    new RuntimeException("Question not found"));
+
+            question.setUser(user);
+
+            question.setAnswer(
+                    req.getAnswer(),
+                    passwordEncoder
+            );
+
+            securityQuestionRepository.save(question);
+        }
+    }
+
+
 }

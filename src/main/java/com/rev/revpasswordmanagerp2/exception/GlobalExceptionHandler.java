@@ -1,6 +1,7 @@
 package com.rev.revpasswordmanagerp2.exception;
 
 import com.rev.revpasswordmanagerp2.dto.VaultResponseDTO;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +24,27 @@ public class GlobalExceptionHandler {
 
         return new VaultResponseDTO(
                 "Something went wrong: " + ex.getMessage(),
+                null
+        );
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public VaultResponseDTO handleBadRequest(BadRequestException ex) {
+
+        return new VaultResponseDTO(
+                ex.getMessage(),
+                null
+        );
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public VaultResponseDTO handleDuplicate(
+            DataIntegrityViolationException ex) {
+
+        return new VaultResponseDTO(
+                "Username or Email already exists",
                 null
         );
     }

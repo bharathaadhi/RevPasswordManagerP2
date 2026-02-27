@@ -3,18 +3,21 @@ package com.rev.revpasswordmanagerp2.dto;
 public class ChangePasswordRequest {
 
     private String usernameOrEmail;
-    private String oldPassword;
+    private String currentPassword;
     private String newPassword;
+    private String verificationCode;
 
     public ChangePasswordRequest() {
     }
 
     public ChangePasswordRequest(String usernameOrEmail,
-                                 String oldPassword,
-                                 String newPassword) {
+                                 String currentPassword,
+                                 String newPassword,
+                                 String verificationCode) {
         this.usernameOrEmail = usernameOrEmail;
-        this.oldPassword = oldPassword;
+        this.currentPassword = currentPassword;
         this.newPassword = newPassword;
+        this.verificationCode = verificationCode;
     }
 
     public String getUsernameOrEmail() {
@@ -25,12 +28,12 @@ public class ChangePasswordRequest {
         this.usernameOrEmail = usernameOrEmail;
     }
 
-    public String getOldPassword() {
-        return oldPassword;
+    public String getCurrentPassword() {   // changed
+        return currentPassword;
     }
 
-    public void setOldPassword(String oldPassword) {
-        this.oldPassword = oldPassword;
+    public void setCurrentPassword(String currentPassword) {   // changed
+        this.currentPassword = currentPassword;
     }
 
     public String getNewPassword() {
@@ -39,5 +42,13 @@ public class ChangePasswordRequest {
 
     public void setNewPassword(String newPassword) {
         this.newPassword = newPassword;
+    }
+
+    public String getVerificationCode() {
+        return verificationCode;
+    }
+
+    public void setVerificationCode(String verificationCode) {
+        this.verificationCode = verificationCode;
     }
 }

@@ -4,23 +4,18 @@ import com.rev.revpasswordmanagerp2.dto.*;
 import com.rev.revpasswordmanagerp2.model.SecurityQuestion;
 import com.rev.revpasswordmanagerp2.model.User;
 import com.rev.revpasswordmanagerp2.repository.UserRepository;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final BCryptPasswordEncoder passwordEncoder;
-
-    public UserServiceImpl(UserRepository userRepository,
-                           BCryptPasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+    private final PasswordEncoder passwordEncoder;
 
     // ================= REGISTER =================
-
     @Override
     public User register(RegisterRequest request) {
 
@@ -45,7 +40,6 @@ public class UserServiceImpl implements UserService {
     }
 
     // ================= LOGIN =================
-
     @Override
     public String login(LoginRequest request) {
 
@@ -67,21 +61,27 @@ public class UserServiceImpl implements UserService {
     }
 
     // ================= UPDATE PROFILE =================
-
     @Override
-    public String updateProfile(UpdateProfileRequest request){
+    public String updateProfile(UpdateProfileRequest request) {
+
+        if (request.getUserId() == null) {
+            throw new RuntimeException("UserId missing");
+        }
 
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        user.setUsername(request.getUsernameOrEmail());
+        user.setUsername(request.getName());
         user.setEmail(request.getEmail());
         user.setPhone(request.getPhone());
 
         userRepository.save(user);
 
-        return "Profile Updated Successfully";
+        return "Profile updated successfully";
     }
+
+    // ================= GET PROFILE =================
+    @Override
     public UserProfileResponse getProfile(String usernameOrEmail) {
 
         User user = userRepository
@@ -95,12 +95,9 @@ public class UserServiceImpl implements UserService {
         );
     }
 
-
-
     // ================= CHANGE MASTER PASSWORD =================
-
     @Override
-    public String changeMasterPassword(ChangePasswordRequest request){
+    public String changeMasterPassword(ChangePasswordRequest request) {
 
         User user = userRepository
                 .findByUsernameOrEmail(
@@ -109,9 +106,9 @@ public class UserServiceImpl implements UserService {
                 )
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if(!passwordEncoder.matches(
-                request.getOldPassword(),
-                user.getMasterPasswordHash())){
+        if (!passwordEncoder.matches(
+                request.getCurrentPassword(),
+                user.getMasterPasswordHash())) {
 
             throw new RuntimeException("Old password incorrect");
         }
@@ -125,9 +122,8 @@ public class UserServiceImpl implements UserService {
     }
 
     // ================= UPDATE SECURITY QUESTIONS =================
-
     @Override
-    public String updateSecurityQuestions(UpdateSecurityAnswerRequest request){
+    public String updateSecurityQuestions(UpdateSecurityAnswerRequest request) {
 
         User user = userRepository
                 .findByUsernameOrEmail(
@@ -142,7 +138,10 @@ public class UserServiceImpl implements UserService {
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Question not found"));
 
-        question.setAnswer(request.getAnswer());
+        question.setAnswer(
+                request.getAnswer(),
+                passwordEncoder
+        );
 
         userRepository.save(user);
 

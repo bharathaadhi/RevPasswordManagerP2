@@ -1,11 +1,14 @@
 package com.rev.revpasswordmanagerp2.dto;
 
 import lombok.Data;
+import java.util.List;
 
 @Data
-public class ViewPasswordRequest {
-    private Long entryId;
-    private String masterPassword;
+public class ImportVaultRequest {
+
     private String usernameOrEmail;
+    private String masterPassword;
     private String verificationCode;
+
+    private List<VaultExportDTO> vaultData;
 }

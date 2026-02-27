@@ -1,11 +1,9 @@
 package com.rev.revpasswordmanagerp2.controller;
 
-import com.rev.revpasswordmanagerp2.dto.PasswordEntryDTO;
-import com.rev.revpasswordmanagerp2.dto.VaultRequest;
-import com.rev.revpasswordmanagerp2.dto.ViewPasswordRequest;
-import com.rev.revpasswordmanagerp2.dto.ViewPasswordResponseDTO;
+import com.rev.revpasswordmanagerp2.dto.*;
 import com.rev.revpasswordmanagerp2.service.VaultService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -86,34 +84,40 @@ public class VaultController {
     // ================= VIEW WITH MASTER PASSWORD =================
 
     @PostMapping("/view")
-    public ViewPasswordResponseDTO view(
-            @RequestBody ViewPasswordRequest request){
-        return vaultService.viewWithVerification(request);
+    public ResponseEntity<?> viewPassword(
+            @RequestBody ViewPasswordRequest request) {
+
+        return ResponseEntity.ok(
+                vaultService.viewWithVerification(request)
+        );
     }
 
     // ================= EXPORT VAULT =================
 
-    @GetMapping("/export")
-    public List<PasswordEntryDTO> export(
-            @RequestParam String usernameOrEmail){
-        return vaultService.exportVault(usernameOrEmail);
+    @PostMapping("/export")
+    public List<VaultExportDTO> export(
+            @RequestBody ExportVaultRequest request) {
+
+        return vaultService.exportVault(request);
     }
 
     // ================= IMPORT VAULT =================
 
     @PostMapping("/import")
     public String importVault(
-            @RequestParam String usernameOrEmail,
-            @RequestBody List<VaultRequest> requests){
+            @RequestBody ImportVaultRequest request){
 
-        return vaultService.importVault(usernameOrEmail, requests);
+        vaultService.importVault(request);
+        return "Import Successful";
     }
 
     // ================= DELETE =================
 
-    @DeleteMapping("/{id}")
-    public String delete(@PathVariable Long id){
-        return vaultService.delete(id);
+    @PostMapping("/delete")
+    public String delete(
+            @RequestBody DeletePasswordRequest request){
+
+        return vaultService.delete(request);
     }
 
     // ================= OLD PASSWORD =================

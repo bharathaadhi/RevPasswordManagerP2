@@ -74,6 +74,8 @@ public class AuditServiceImpl implements AuditService {
     }
 
     // Generate audit summary
+    // ================= SECURITY AUDIT REPORT =================
+
     @Override
     public Map<String, Object> generateSecurityReport(User user) {
 
@@ -86,22 +88,37 @@ public class AuditServiceImpl implements AuditService {
         List<PasswordEntryAuditDTO> reused =
                 getReusedPasswords(user);
 
-        int score = 100
-                - (weak.size() * 10)
-                - (reused.size() * 15);
+        int totalPasswords = all.size();
+
+        /* ================= IMPROVED SCORE CALCULATION ================= */
+
+        int weakPenalty =
+                (weak.size() * 40) /
+                        Math.max(totalPasswords, 1);
+
+        int reusedPenalty =
+                (reused.size() * 60) /
+                        Math.max(totalPasswords, 1);
+
+        int score = 100 - (weakPenalty + reusedPenalty);
 
         score = Math.max(score, 0);
 
+        /* ================= ALERT MESSAGE ================= */
+
         String alert;
+
         if (weak.size() > 0 || reused.size() > 0) {
             alert = "Security Alert: Weak or reused passwords detected";
         } else {
             alert = "All passwords are secure";
         }
 
+        /* ================= RESPONSE ================= */
+
         Map<String, Object> report = new HashMap<>();
 
-        report.put("totalPasswords", all.size());
+        report.put("totalPasswords", totalPasswords);
         report.put("weakPasswords", weak.size());
         report.put("reusedPasswords", reused.size());
         report.put("securityScore", score);

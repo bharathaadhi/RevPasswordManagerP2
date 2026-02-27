@@ -1,9 +1,6 @@
 package com.rev.revpasswordmanagerp2.service;
 
-import com.rev.revpasswordmanagerp2.dto.PasswordEntryDTO;
-import com.rev.revpasswordmanagerp2.dto.VaultRequest;
-import com.rev.revpasswordmanagerp2.dto.ViewPasswordRequest;
-import com.rev.revpasswordmanagerp2.dto.ViewPasswordResponseDTO;
+import com.rev.revpasswordmanagerp2.dto.*;
 
 import java.util.List;
 
@@ -17,7 +14,7 @@ public interface VaultService {
 
     String update(Long id, VaultRequest request);
 
-    String delete(Long id);
+    String delete(DeletePasswordRequest request);
 
     // ================= FAVORITES =================
 
@@ -43,7 +40,13 @@ public interface VaultService {
 
     // ================= IMPORT / EXPORT =================
 
-    List<PasswordEntryDTO> exportVault(String usernameOrEmail);
+    // ========= IMPORT / EXPORT =========
 
-    String importVault(String usernameOrEmail, List<VaultRequest> requests);
+    List<VaultExportDTO> exportVault(
+            ExportVaultRequest request
+    );
+
+    void importVault(
+            ImportVaultRequest request
+    );
 }

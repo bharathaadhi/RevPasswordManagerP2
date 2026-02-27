@@ -6,7 +6,7 @@ public interface AuthService {
 
     String registerUser(RegisterRequest request);
 
-    String login(LoginRequest request);
+    LoginResponseDTO login(LoginRequest request);
 
     String changePassword(ChangePasswordRequest request);
 
