@@ -2,7 +2,6 @@ package com.rev.revpasswordmanagerp2.service;
 
 import com.rev.revpasswordmanagerp2.dto.*;
 import com.rev.revpasswordmanagerp2.exception.BadRequestException;
-import com.rev.revpasswordmanagerp2.model.PasswordEntry;
 import com.rev.revpasswordmanagerp2.model.SecurityQuestion;
 import com.rev.revpasswordmanagerp2.model.User;
 import com.rev.revpasswordmanagerp2.repository.PasswordEntryRepository;
@@ -44,22 +43,15 @@ public class AuthServiceImpl implements AuthService {
 
         logger.info("Registration attempt for username: {}", request.getUsername());
 
-        if (userRepository.existsByUsername(request.getUsername())) {
-            logger.warn("Registration failed - username already exists: {}", request.getUsername());
+        if (userRepository.existsByUsername(request.getUsername()))
             throw new BadRequestException("Username already exists");
-        }
 
-        if (userRepository.existsByEmail(request.getEmail())) {
-            logger.warn("Registration failed - email already exists: {}", request.getEmail());
+        if (userRepository.existsByEmail(request.getEmail()))
             throw new BadRequestException("Email already exists");
-        }
 
         if (request.getSecurityQuestions() == null ||
-                request.getSecurityQuestions().size() < 3) {
-
-            logger.error("Registration failed - insufficient security questions");
+                request.getSecurityQuestions().size() < 3)
             throw new BadRequestException("Minimum 3 security questions required");
-        }
 
         String encodedPassword =
                 passwordEncoder.encode(request.getMasterPassword());
@@ -74,8 +66,6 @@ public class AuthServiceImpl implements AuthService {
 
         User savedUser = userRepository.save(user);
 
-        logger.info("User successfully saved with ID: {}", savedUser.getId());
-
         request.getSecurityQuestions().forEach(q -> {
             SecurityQuestion sq = new SecurityQuestion();
             sq.setUser(savedUser);
@@ -83,8 +73,6 @@ public class AuthServiceImpl implements AuthService {
             sq.setAnswerHash(passwordEncoder.encode(q.getAnswer()));
             securityQuestionRepository.save(sq);
         });
-
-        logger.info("Security questions saved successfully for user: {}", savedUser.getUsername());
 
         return "User Registered Successfully";
     }
@@ -100,16 +88,16 @@ public class AuthServiceImpl implements AuthService {
                 .findByUsernameOrEmail(
                         request.getUsernameOrEmail(),
                         request.getUsernameOrEmail())
-                .orElseThrow(() -> {
-                    logger.warn("Login failed - user not found: {}", request.getUsernameOrEmail());
-                    return new RuntimeException("User not found");
-                });
+                .orElseThrow(() ->
+                        new RuntimeException("User not found"));
 
         if (!passwordEncoder.matches(
                 request.getMasterPassword(),
                 user.getMasterPasswordHash())) {
 
-            logger.warn("Login failed - invalid credentials for user: {}", user.getUsername());
+            logger.warn("Login failed - invalid credentials for user: {}",
+                    user.getUsername());
+
             throw new BadRequestException("Invalid credentials");
         }
 
@@ -129,212 +117,17 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public String changePassword(ChangePasswordRequest request) {
 
-        logger.info("Change password request for user: {}", request.getUsernameOrEmail());
-
         User user = userRepository
                 .findByUsernameOrEmail(
                         request.getUsernameOrEmail(),
                         request.getUsernameOrEmail())
-                .orElseThrow(() -> {
-                    logger.warn("Change password failed - user not found: {}", request.getUsernameOrEmail());
-                    return new RuntimeException("User not found");
-                });
+                .orElseThrow(() ->
+                        new RuntimeException("User not found"));
 
         if (!passwordEncoder.matches(
                 request.getCurrentPassword(),
-                user.getMasterPasswordHash())) {
-
-            logger.warn("Change password failed - incorrect current password for user: {}", user.getUsername());
+                user.getMasterPasswordHash()))
             return "Old password incorrect";
-        }
-
-        String encoded = passwordEncoder.encode(request.getNewPassword());
-
-        user.setPassword(encoded);
-        user.setMasterPasswordHash(encoded);
-
-        userRepository.save(user);
-
-        logger.info("Password changed successfully for user: {}", user.getUsername());
-
-        return "Password changed successfully";
-    }
-
-    /* ================= FORGOT PASSWORD ================= */
-
-    @Override
-    public String forgotPassword(ForgotPasswordRequest request) {
-
-        logger.warn("Forgot password process initiated for user: {}",
-                request.getUsernameOrEmail());
-
-        // ================= FIND USER =================
-        User user = userRepository
-                .findByUsernameOrEmail(
-                        request.getUsernameOrEmail(),
-                        request.getUsernameOrEmail())
-                .orElseThrow(() -> {
-
-                    logger.error("Forgot password FAILED - User not found: {}",
-                            request.getUsernameOrEmail());
-
-                    return new RuntimeException("User not found");
-                });
-
-        logger.info("User located successfully: {}", user.getUsername());
-
-
-        // ================= LOAD SAVED QUESTIONS =================
-        List<SecurityQuestion> savedQuestions =
-                securityQuestionRepository.findByUserId(user.getId());
-
-        if (savedQuestions == null || savedQuestions.isEmpty()) {
-
-            logger.error("Security questions NOT configured for user: {}",
-                    user.getUsername());
-
-            throw new RuntimeException("Security questions not configured");
-        }
-
-        logger.info("Loaded {} security questions for user: {}",
-                savedQuestions.size(),
-                user.getUsername());
-
-
-        // ================= VALIDATE ANY ONE ANSWER =================
-        boolean verified =
-                request.getSecurityQuestions()
-                        .stream()
-                        .anyMatch(dto -> {
-
-                            logger.info("Checking question: {}", dto.getQuestion());
-
-                            return savedQuestions.stream()
-                                    .anyMatch(saved -> {
-
-                                        boolean questionMatch =
-                                                saved.getQuestion()
-                                                        .equalsIgnoreCase(dto.getQuestion());
-
-                                        boolean answerMatch =
-                                                passwordEncoder.matches(
-                                                        dto.getAnswer(),
-                                                        saved.getAnswerHash());
-
-                                        if (questionMatch && answerMatch) {
-                                            logger.info(
-                                                    "Security answer MATCHED for user: {}",
-                                                    user.getUsername());
-                                        }
-
-                                        return questionMatch && answerMatch;
-                                    });
-                        });
-
-
-        // ================= VERIFICATION RESULT =================
-        if (!verified) {
-
-            logger.warn("Security verification FAILED for user: {}",
-                    user.getUsername());
-
-            throw new RuntimeException("Identity verification failed");
-        }
-
-        logger.info("Identity verification SUCCESS for user: {}",
-                user.getUsername());
-
-
-        // ================= UPDATE PASSWORD =================
-        String encodedPassword =
-                passwordEncoder.encode(request.getNewPassword());
-
-        user.setPassword(encodedPassword);
-        user.setMasterPasswordHash(encodedPassword);
-
-        userRepository.save(user);
-
-        logger.info("Password reset SUCCESSFUL for user: {}",
-                user.getUsername());
-
-        return "Password reset successful";
-    }
-
-
-    /* ================= TOGGLE 2FA ================= */
-
-    @Override
-    public String toggleTwoFactor(TwoFactorRequest request) {
-
-        logger.warn("2FA toggle request for user: {}", request.getUsernameOrEmail());
-
-        User user = userRepository
-                .findByUsernameOrEmail(
-                        request.getUsernameOrEmail(),
-                        request.getUsernameOrEmail())
-                .orElseThrow(() -> {
-                    logger.warn("2FA toggle failed - user not found: {}", request.getUsernameOrEmail());
-                    return new RuntimeException("User not found");
-                });
-
-        user.setTwoFactorEnabled(request.getEnable());
-        userRepository.save(user);
-
-        logger.info("2FA updated successfully for user: {}", user.getUsername());
-
-        return "2FA Updated Successfully";
-    }
-
-    /* ================= UPDATE PROFILE ================= */
-
-    @Override
-    public String updateProfile(UpdateProfileRequest request){
-
-        logger.info("Profile update request for userId: {}", request.getUserId());
-
-        User user = userRepository
-                .findById(request.getUserId())
-                .orElseThrow(() -> {
-                    logger.warn("User not found: {}", request.getUserId());
-                    return new RuntimeException("User not found");
-                });
-
-        user.setUsername(request.getName());
-        user.setEmail(request.getEmail());
-        user.setPhone(request.getPhone());
-
-        userRepository.save(user);
-
-        logger.info("Profile updated successfully");
-
-        return "Profile updated successfully";
-    }
-
-    /* ================= CHANGE MASTER PASSWORD ================= */
-
-    @Override
-    public String changeMasterPassword(ChangePasswordRequest request){
-
-        logger.warn("Master password change request for user: {}", request.getUsernameOrEmail());
-
-        User user = userRepository
-                .findByUsernameOrEmail(
-                        request.getUsernameOrEmail(),
-                        request.getUsernameOrEmail())
-                .orElseThrow(() -> {
-                    logger.warn("Master password change failed - user not found: {}", request.getUsernameOrEmail());
-                    return new RuntimeException("User not found");
-                });
-
-        if(!passwordEncoder.matches(
-                request.getCurrentPassword(),
-                user.getMasterPasswordHash())){
-
-            logger.warn("Master password change failed - incorrect current password for user: {}",
-                    user.getUsername());
-
-            return "Current password incorrect";
-        }
 
         String encoded =
                 passwordEncoder.encode(request.getNewPassword());
@@ -344,7 +137,113 @@ public class AuthServiceImpl implements AuthService {
 
         userRepository.save(user);
 
-        logger.info("Master password updated successfully for user: {}", user.getUsername());
+        return "Password changed successfully";
+    }
+
+    /* ================= FORGOT PASSWORD ================= */
+
+    @Override
+    public String forgotPassword(ForgotPasswordRequest request) {
+
+        User user = userRepository
+                .findByUsernameOrEmail(
+                        request.getUsernameOrEmail(),
+                        request.getUsernameOrEmail())
+                .orElseThrow(() ->
+                        new RuntimeException("User not found"));
+
+        List<SecurityQuestion> savedQuestions =
+                securityQuestionRepository.findByUserId(user.getId());
+
+        boolean verified =
+                request.getSecurityQuestions()
+                        .stream()
+                        .anyMatch(dto ->
+                                savedQuestions.stream()
+                                        .anyMatch(saved ->
+                                                saved.getQuestion()
+                                                        .equalsIgnoreCase(dto.getQuestion())
+                                                        &&
+                                                        passwordEncoder.matches(
+                                                                dto.getAnswer(),
+                                                                saved.getAnswerHash()
+                                                        )));
+
+        if (!verified)
+            throw new RuntimeException("Identity verification failed");
+
+        String encodedPassword =
+                passwordEncoder.encode(request.getNewPassword());
+
+        user.setPassword(encodedPassword);
+        user.setMasterPasswordHash(encodedPassword);
+
+        userRepository.save(user);
+
+        return "Password reset successful";
+    }
+
+    /* ================= TOGGLE 2FA ================= */
+
+    @Override
+    public String toggleTwoFactor(TwoFactorRequest request) {
+
+        User user = userRepository
+                .findByUsernameOrEmail(
+                        request.getUsernameOrEmail(),
+                        request.getUsernameOrEmail())
+                .orElseThrow(() ->
+                        new RuntimeException("User not found"));
+
+        user.setTwoFactorEnabled(request.getEnable());
+        userRepository.save(user);
+
+        return "2FA Updated Successfully";
+    }
+
+    /* ================= UPDATE PROFILE ================= */
+
+    @Override
+    public String updateProfile(UpdateProfileRequest request){
+
+        User user = userRepository
+                .findById(request.getUserId())
+                .orElseThrow(() ->
+                        new RuntimeException("User not found"));
+
+        user.setUsername(request.getName());
+        user.setEmail(request.getEmail());
+        user.setPhone(request.getPhone());
+
+        userRepository.save(user);
+
+        return "Profile updated successfully";
+    }
+
+    /* ================= CHANGE MASTER PASSWORD ================= */
+
+    @Override
+    public String changeMasterPassword(ChangePasswordRequest request){
+
+        User user = userRepository
+                .findByUsernameOrEmail(
+                        request.getUsernameOrEmail(),
+                        request.getUsernameOrEmail())
+                .orElseThrow(() ->
+                        new RuntimeException("User not found"));
+
+        if(!passwordEncoder.matches(
+                request.getCurrentPassword(),
+                user.getMasterPasswordHash()))
+            return "Current password incorrect";
+
+        String encoded =
+                passwordEncoder.encode(request.getNewPassword());
+
+        user.setPassword(encoded);
+        user.setMasterPasswordHash(encoded);
+
+        userRepository.save(user);
 
         return "Master password updated successfully";
     }

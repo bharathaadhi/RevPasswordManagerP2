@@ -13,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -29,19 +28,10 @@ public class AuthController {
     private static final Logger logger =
             LogManager.getLogger(AuthController.class);
 
-    @Autowired
     private final AuthService authService;
-
-    @Autowired
     private final UserRepository userRepository;
-
-    @Autowired
     private final PasswordEncoder passwordEncoder;
-
-    @Autowired
     private final JwtUtil jwtUtil;
-
-    @Autowired
     private final SecurityQuestionRepository securityQuestionRepository;
 
     // ================= REGISTER =================
@@ -53,7 +43,7 @@ public class AuthController {
 
         String message = authService.registerUser(request);
 
-        logger.info("User registered successfully: {}", request.getUsername());
+        logger.info("User registered successfully");
 
         return ResponseEntity.ok(
                 new VaultResponseDTO(message, null)
@@ -91,10 +81,19 @@ public class AuthController {
         );
     }
 
+    // ================= UPDATE PROFILE =================
+    @PutMapping("/updateProfile")
+    public ResponseEntity<String> updateProfile(
+            @RequestBody UpdateProfileRequest request){
+
+        return ResponseEntity.ok(
+                authService.updateProfile(request));
+    }
+
     // ================= CHANGE PASSWORD =================
     @PostMapping("/changePassword")
     public ResponseEntity<String> changePassword(
-            @RequestBody ChangePasswordRequest request) {
+            @RequestBody ChangePasswordRequest request){
 
         logger.info("Change password request for user: {}",
                 request.getUsernameOrEmail());
@@ -106,7 +105,7 @@ public class AuthController {
     // ================= FORGOT PASSWORD =================
     @PostMapping("/forgotPassword")
     public ResponseEntity<String> forgotPassword(
-            @RequestBody ForgotPasswordRequest request) {
+            @RequestBody ForgotPasswordRequest request){
 
         logger.warn("Forgot password for user: {}",
                 request.getUsernameOrEmail());
@@ -118,7 +117,7 @@ public class AuthController {
     // ================= TOGGLE 2FA =================
     @PostMapping("/toggle2fa")
     public ResponseEntity<String> toggle2FA(
-            @RequestBody TwoFactorRequest request) {
+            @RequestBody TwoFactorRequest request){
 
         logger.warn("2FA toggle for user: {}",
                 request.getUsernameOrEmail());
@@ -136,20 +135,19 @@ public class AuthController {
         return ResponseEntity.ok("Logged out successfully");
     }
 
+    // ================= SECURITY QUESTIONS =================
     @GetMapping("/security-questions/{usernameOrEmail}")
     public ResponseEntity<List<String>> getQuestions(
             @PathVariable String usernameOrEmail){
 
-        logger.info("Fetching security questions for: {}", usernameOrEmail);
+        logger.info("Fetching security questions");
 
         User user = userRepository
                 .findByUsernameOrEmail(
                         usernameOrEmail,
                         usernameOrEmail)
-                .orElseThrow(() -> {
-                    logger.error("User not found: {}", usernameOrEmail);
-                    return new RuntimeException("User not found");
-                });
+                .orElseThrow(() ->
+                        new RuntimeException("User not found"));
 
         List<String> questions =
                 securityQuestionRepository
@@ -157,8 +155,6 @@ public class AuthController {
                         .stream()
                         .map(SecurityQuestion::getQuestion)
                         .toList();
-
-        logger.info("Security questions fetched successfully");
 
         return ResponseEntity.ok(questions);
     }

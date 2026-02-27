@@ -6,7 +6,9 @@ import com.rev.revpasswordmanagerp2.model.VerificationCode;
 import com.rev.revpasswordmanagerp2.repository.UserRepository;
 import com.rev.revpasswordmanagerp2.repository.VerificationCodeRepository;
 import com.rev.revpasswordmanagerp2.util.VerificationCodeUtil;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -37,6 +39,10 @@ public class VerificationServiceImpl implements VerificationService {
 
         verificationCodeRepository.save(vc);
 
+        // Optional debug log (can remove later)
+        System.out.println(
+                "Verification Code for " + user.getEmail() + ": " + code);
+
         return VerificationResponseDTO.builder()
                 .message("Verification code sent")
                 .email(user.getEmail())
@@ -53,8 +59,10 @@ public class VerificationServiceImpl implements VerificationService {
 
         VerificationCode vc =
                 verificationCodeRepository
-                        .findTopByUserIdAndUsedFalseOrderByCreatedTimeDesc(user.getId())
-                        .orElseThrow(() -> new RuntimeException("No active code found"));
+                        .findTopByUserIdAndUsedFalseOrderByCreatedTimeDesc(
+                                user.getId())
+                        .orElseThrow(() ->
+                                new RuntimeException("No active code found"));
 
         if (!vc.getCode().equals(code)) {
             throw new RuntimeException("Invalid Code");

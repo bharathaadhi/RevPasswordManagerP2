@@ -23,7 +23,7 @@ public class AuditServiceImpl implements AuditService {
     private final PasswordHistoryRepository passwordHistoryRepository;
     private final EncryptionUtil encryptionUtil;
 
-    // Detect weak passwords
+    // ================= WEAK PASSWORD CHECK =================
     @Override
     public List<PasswordEntryAuditDTO> getWeakPasswords(User user) {
 
@@ -48,7 +48,7 @@ public class AuditServiceImpl implements AuditService {
                 .collect(Collectors.toList());
     }
 
-    // Detect reused passwords
+    // ================= REUSED PASSWORD CHECK =================
     @Override
     public List<PasswordEntryAuditDTO> getReusedPasswords(User user) {
 
@@ -73,9 +73,7 @@ public class AuditServiceImpl implements AuditService {
                 .collect(Collectors.toList());
     }
 
-    // Generate audit summary
     // ================= SECURITY AUDIT REPORT =================
-
     @Override
     public Map<String, Object> generateSecurityReport(User user) {
 
@@ -90,8 +88,7 @@ public class AuditServiceImpl implements AuditService {
 
         int totalPasswords = all.size();
 
-        /* ================= IMPROVED SCORE CALCULATION ================= */
-
+        // ===== Security Score Calculation =====
         int weakPenalty =
                 (weak.size() * 40) /
                         Math.max(totalPasswords, 1);
@@ -101,11 +98,9 @@ public class AuditServiceImpl implements AuditService {
                         Math.max(totalPasswords, 1);
 
         int score = 100 - (weakPenalty + reusedPenalty);
-
         score = Math.max(score, 0);
 
-        /* ================= ALERT MESSAGE ================= */
-
+        // ===== Alert Message =====
         String alert;
 
         if (weak.size() > 0 || reused.size() > 0) {
@@ -113,8 +108,6 @@ public class AuditServiceImpl implements AuditService {
         } else {
             alert = "All passwords are secure";
         }
-
-        /* ================= RESPONSE ================= */
 
         Map<String, Object> report = new HashMap<>();
 
@@ -128,6 +121,7 @@ public class AuditServiceImpl implements AuditService {
         return report;
     }
 
+    // ================= SECURITY ALERT =================
     @Override
     public String securityAlert(User user){
 
@@ -141,15 +135,18 @@ public class AuditServiceImpl implements AuditService {
         return "All passwords are secure";
     }
 
+    // ================= OLD PASSWORD CHECK =================
     @Override
     public List<PasswordEntry> getOldPasswords(User user) {
 
-        LocalDateTime ninetyDaysAgo = LocalDateTime.now().minusDays(90);
+        LocalDateTime ninetyDaysAgo =
+                LocalDateTime.now().minusDays(90);
 
         return passwordEntryRepository.findByUser(user)
                 .stream()
-                .filter(entry -> entry.getUpdatedAt() != null &&
-                        entry.getUpdatedAt().isBefore(ninetyDaysAgo))
+                .filter(entry ->
+                        entry.getUpdatedAt() != null &&
+                                entry.getUpdatedAt().isBefore(ninetyDaysAgo))
                 .toList();
     }
 }
