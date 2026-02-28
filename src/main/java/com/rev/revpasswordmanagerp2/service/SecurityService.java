@@ -2,8 +2,8 @@ package com.rev.revpasswordmanagerp2.service;
 
 import com.rev.revpasswordmanagerp2.dto.AnswerRequest;
 import com.rev.revpasswordmanagerp2.dto.ChangePasswordRequest;
+import com.rev.revpasswordmanagerp2.dto.SecurityAnswerDTO;
 import com.rev.revpasswordmanagerp2.model.SecurityQuestion;
-import com.rev.revpasswordmanagerp2.model.VerificationCode;
 
 import java.util.List;
 
@@ -21,8 +21,6 @@ public interface SecurityService {
 
     String changeMasterPassword(ChangePasswordRequest request);
 
-    String toggleTwoFactor(String usernameOrEmail, boolean enabled);
-
     boolean validateMasterPassword(String raw, String encoded);
 
     List<SecurityQuestion> getAllQuestions();
@@ -30,4 +28,7 @@ public interface SecurityService {
     void updateSecurityAnswers(Long userId,
                                List<AnswerRequest> answers);
 
+    void updateSecurityAnswersByUsername(
+            String usernameOrEmail,
+            List<SecurityAnswerDTO> answers);
 }

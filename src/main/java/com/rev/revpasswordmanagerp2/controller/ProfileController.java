@@ -24,8 +24,6 @@ public class ProfileController {
                 userService.updateProfile(request));
     }
 
-
-
     @PutMapping("/change-master-password")
     public ResponseEntity<String> changeMasterPassword(
             @RequestBody ChangePasswordRequest request){
@@ -33,8 +31,6 @@ public class ProfileController {
         return ResponseEntity.ok(
                 userService.changeMasterPassword(request));
     }
-
-
 
     @PutMapping("/security-questions")
     public ResponseEntity<String> updateSecurityQuestions(

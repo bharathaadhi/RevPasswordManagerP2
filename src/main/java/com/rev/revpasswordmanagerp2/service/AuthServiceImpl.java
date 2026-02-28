@@ -34,6 +34,7 @@ public class AuthServiceImpl implements AuthService {
     private final SecurityQuestionRepository securityQuestionRepository;
     private final PasswordEntryRepository passwordEntryRepository;
     private final JwtUtil jwtUtil;
+    private final VerificationService verificationService;
 
     /* ================= REGISTER ================= */
 
@@ -82,8 +83,6 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public LoginResponseDTO login(LoginRequest request) {
 
-        logger.info("Login attempt for: {}", request.getUsernameOrEmail());
-
         User user = userRepository
                 .findByUsernameOrEmail(
                         request.getUsernameOrEmail(),
@@ -95,21 +94,35 @@ public class AuthServiceImpl implements AuthService {
                 request.getMasterPassword(),
                 user.getMasterPasswordHash())) {
 
-            logger.warn("Login failed - invalid credentials for user: {}",
-                    user.getUsername());
-
-            throw new BadRequestException("Invalid credentials");
+            throw new RuntimeException("Invalid credentials");
         }
 
-        String token = jwtUtil.generateToken(user.getUsername());
+        /* ========= 2FA CHECK ========= */
 
-        logger.info("Login successful for user: {}", user.getUsername());
+        if (Boolean.TRUE.equals(user.getTwoFactorEnabled())) {
 
-        return new LoginResponseDTO(
-                token,
-                user.getUsername(),
-                user.getId()
-        );
+            VerificationResponseDTO response =
+                    verificationService.generateCode(
+                            user.getUsername());
+
+            return LoginResponseDTO.builder()
+                    .twoFactorRequired(true)
+                    .username(user.getUsername())
+                    .code(response.getCode())
+                    .build();
+        }
+
+        /* ========= NORMAL LOGIN ========= */
+
+        String token =
+                jwtUtil.generateToken(user.getUsername());
+
+        return LoginResponseDTO.builder()
+                .token(token)
+                .username(user.getUsername())
+                .userId(user.getId())
+                .twoFactorRequired(false)
+                .build();
     }
 
     /* ================= CHANGE PASSWORD ================= */

@@ -27,8 +27,7 @@ public interface VaultService {
 
     List<PasswordEntryDTO> getOldPasswords(String usernameOrEmail);
 
-    // ========= IMPORT / EXPORT =========
-    List<VaultExportDTO> exportVault(ExportVaultRequest request);
+    List<PasswordEntryDTO> exportVault(ExportVaultRequest request);
 
     void importVault(ImportVaultRequest request);
 }

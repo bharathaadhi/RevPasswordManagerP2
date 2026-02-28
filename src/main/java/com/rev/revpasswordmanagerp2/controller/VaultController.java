@@ -15,20 +15,16 @@ public class VaultController {
 
     private final VaultService vaultService;
 
-
     @PostMapping
     public String add(@RequestBody VaultRequest request){
         return vaultService.addPassword(request);
     }
-
 
     @PutMapping("/{id}")
     public String update(@PathVariable Long id,
                          @RequestBody VaultRequest request){
         return vaultService.update(id, request);
     }
-
-
 
     @GetMapping
     public List<PasswordEntryDTO> getAll(
@@ -43,8 +39,6 @@ public class VaultController {
         return vaultService.search(usernameOrEmail, keyword);
     }
 
-
-
     @GetMapping("/filter/{category}")
     public List<PasswordEntryDTO> filter(
             @RequestParam String usernameOrEmail,
@@ -52,15 +46,11 @@ public class VaultController {
         return vaultService.filter(usernameOrEmail, category);
     }
 
-
-
     @PatchMapping("/{id}/favorite")
     public String favorite(@PathVariable Long id,
                            @RequestParam boolean value){
         return vaultService.favorite(id, value);
     }
-
-
 
     @GetMapping("/favorites")
     public List<PasswordEntryDTO> getFavorites(
@@ -75,7 +65,6 @@ public class VaultController {
         return vaultService.sort(usernameOrEmail, sortBy);
     }
 
-
     @PostMapping("/view")
     public ResponseEntity<?> viewPassword(
             @RequestBody ViewPasswordRequest request) {
@@ -85,15 +74,12 @@ public class VaultController {
         );
     }
 
-
-
     @PostMapping("/export")
-    public List<VaultExportDTO> export(
+    public List<PasswordEntryDTO> export(
             @RequestBody ExportVaultRequest request) {
 
         return vaultService.exportVault(request);
     }
-
 
     @PostMapping("/import")
     public String importVault(
@@ -103,16 +89,12 @@ public class VaultController {
         return "Import Successful";
     }
 
-
-
     @PostMapping("/delete")
     public String delete(
             @RequestBody DeletePasswordRequest request){
 
         return vaultService.delete(request);
     }
-
-
 
     @GetMapping("/old")
     public List<PasswordEntryDTO> getOld(

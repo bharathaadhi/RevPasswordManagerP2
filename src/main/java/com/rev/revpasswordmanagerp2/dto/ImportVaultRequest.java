@@ -10,5 +10,5 @@ public class ImportVaultRequest {
     private String masterPassword;
     private String verificationCode;
 
-    private List<VaultExportDTO> vaultData;
+    private List<PasswordEntryDTO> vaultData;
 }

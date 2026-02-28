@@ -28,7 +28,6 @@ public class SecurityQuestion {
     @Column(nullable = false)
     private String answerHash;
 
-    // store encoded answer
     public void setAnswer(String answer, PasswordEncoder encoder) {
         this.answerHash = encoder.encode(answer);
     }

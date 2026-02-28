@@ -39,7 +39,6 @@ public class VerificationServiceImpl implements VerificationService {
 
         verificationCodeRepository.save(vc);
 
-        // Optional debug log (can remove later)
         System.out.println(
                 "Verification Code for " + user.getEmail() + ": " + code);
 

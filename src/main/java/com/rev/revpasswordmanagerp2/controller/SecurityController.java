@@ -1,18 +1,17 @@
 package com.rev.revpasswordmanagerp2.controller;
 
 import com.rev.revpasswordmanagerp2.dto.*;
-import com.rev.revpasswordmanagerp2.model.SecurityQuestion;
-import com.rev.revpasswordmanagerp2.model.VerificationCode;
+import com.rev.revpasswordmanagerp2.model.User;
+import com.rev.revpasswordmanagerp2.repository.UserRepository;
 import com.rev.revpasswordmanagerp2.service.SecurityService;
 import com.rev.revpasswordmanagerp2.service.VerificationService;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.rev.revpasswordmanagerp2.dto.UpdateAnswersRequest;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/security")
@@ -22,6 +21,7 @@ public class SecurityController {
 
     private final SecurityService securityService;
     private final VerificationService verificationService;
+    private final UserRepository userRepository;
 
 
     @PostMapping("/generate")
@@ -83,13 +83,6 @@ public class SecurityController {
         return securityService.changeMasterPassword(request);
     }
 
-    @PostMapping("/toggle-2fa")
-    public String toggle2FA(
-            @RequestParam String usernameOrEmail,
-            @RequestParam boolean enabled) {
-        return securityService.toggleTwoFactor(usernameOrEmail, enabled);
-    }
-
     @GetMapping("/questions")
     public ResponseEntity<?> getQuestions() {
         return ResponseEntity.ok(
@@ -101,10 +94,19 @@ public class SecurityController {
     public ResponseEntity<?> updateAnswers(
             @RequestBody UpdateAnswersRequest request) {
 
-        securityService.updateSecurityAnswers(
-                request.getUserId(),
-                request.getAnswers());
+        if (request.getUserId() != null) {
 
-        return ResponseEntity.ok("Updated");
+            securityService.updateSecurityAnswers(
+                    request.getUserId(),
+                    request.getAnswers());
+
+        } else {
+
+            securityService.updateSecurityAnswersByUsername(
+                    request.getUsernameOrEmail(),
+                    request.getSecurityQuestions());
+        }
+
+        return ResponseEntity.ok("Answers updated successfully");
     }
 }

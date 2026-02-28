@@ -248,60 +248,96 @@ public class VaultServiceImpl implements VaultService {
 
     // ================= EXPORT =================
     @Override
-    public List<VaultExportDTO> exportVault(ExportVaultRequest request){
+    public List<PasswordEntryDTO> exportVault(
+            ExportVaultRequest request) {
 
-        User user=userRepository
+        User user = userRepository
                 .findByUsernameOrEmail(
                         request.getUsernameOrEmail(),
                         request.getUsernameOrEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow();
 
-        verificationService.validateCode(
-                request.getUsernameOrEmail(),
-                request.getVerificationCode());
+        List<PasswordEntry> entries =
+                passwordEntryRepository.findByUser(user);
 
-        return passwordEntryRepository.findByUserId(user.getId())
-                .stream()
-                .map(e->new VaultExportDTO(
-                        e.getAccountName(),
-                        e.getWebsiteUrl(),
-                        e.getAccountUsername(),
-                        encryptionUtil.decrypt(e.getEncryptedPassword()),
-                        e.getCategory().name(),
-                        e.getNotes()))
+        return entries.stream()
+                .map(entry ->
+                        PasswordEntryDTO.builder()
+                                .id(entry.getId())
+                                .accountName(entry.getAccountName())
+                                .website(entry.getWebsiteUrl())
+                                .username(entry.getAccountUsername())
+                                .category(
+                                        entry.getCategory().name()
+                                )
+                                .encryptedPassword(
+                                        entry.getEncryptedPassword()
+                                )
+                                .favorite(
+                                        entry.getFavorite()
+                                )
+                                .createdAt(
+                                        entry.getCreatedAt().toString()
+                                )
+                                .updatedAt(
+                                        entry.getUpdatedAt().toString()
+                                )
+                                .build()
+                )
                 .toList();
     }
 
     // ================= IMPORT =================
     @Override
-    public void importVault(ImportVaultRequest request){
+    public void importVault(ImportVaultRequest request) {
 
-        User user=userRepository
+        User user = userRepository
                 .findByUsernameOrEmail(
                         request.getUsernameOrEmail(),
                         request.getUsernameOrEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() ->
+                        new RuntimeException("User not found"));
 
-        verificationService.validateCode(
+        boolean valid = verificationService.validateCode(
                 request.getUsernameOrEmail(),
                 request.getVerificationCode());
 
-        for(VaultExportDTO dto:request.getVaultData()){
+        if (!valid) {
+            throw new RuntimeException("Invalid verification code");
+        }
 
-            PasswordEntry entry=new PasswordEntry();
+        for (PasswordEntryDTO dto : request.getVaultData()) {
+
+            PasswordEntry entry = new PasswordEntry();
 
             entry.setUser(user);
             entry.setAccountName(dto.getAccountName());
             entry.setWebsiteUrl(dto.getWebsite());
             entry.setAccountUsername(dto.getUsername());
             entry.setEncryptedPassword(
-                    encryptionUtil.encrypt(dto.getPassword()));
-            entry.setCategory(Category.valueOf(dto.getCategory()));
-            entry.setNotes(dto.getNotes());
-            entry.setCreatedAt(LocalDateTime.now());
-            entry.setUpdatedAt(LocalDateTime.now());
+                    dto.getEncryptedPassword()
+            );
+
+            entry.setCategory(
+                    Category.valueOf(dto.getCategory())
+            );
+
+            entry.setFavorite(dto.isFavorite());
+
+            entry.setNotes(null);
+
+            entry.setCreatedAt(
+                    dto.getCreatedAt() != null
+                            ? LocalDateTime.parse(dto.getCreatedAt())
+                            : LocalDateTime.now()
+            );
+
+            entry.setUpdatedAt(
+                    dto.getUpdatedAt() != null
+                            ? LocalDateTime.parse(dto.getUpdatedAt())
+                            : LocalDateTime.now()
+            );
 
             passwordEntryRepository.save(entry);
         }
-    }
-}
+    }}

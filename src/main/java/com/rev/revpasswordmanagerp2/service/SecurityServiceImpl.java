@@ -2,26 +2,21 @@ package com.rev.revpasswordmanagerp2.service;
 
 import com.rev.revpasswordmanagerp2.dto.AnswerRequest;
 import com.rev.revpasswordmanagerp2.dto.ChangePasswordRequest;
+import com.rev.revpasswordmanagerp2.dto.SecurityAnswerDTO;
 import com.rev.revpasswordmanagerp2.model.SecurityQuestion;
 import com.rev.revpasswordmanagerp2.model.User;
-import com.rev.revpasswordmanagerp2.model.UserSecurityAnswer;
-import com.rev.revpasswordmanagerp2.model.VerificationCode;
 import com.rev.revpasswordmanagerp2.repository.SecurityQuestionRepository;
 import com.rev.revpasswordmanagerp2.repository.UserRepository;
 import com.rev.revpasswordmanagerp2.repository.UserSecurityAnswerRepository;
 import com.rev.revpasswordmanagerp2.repository.VerificationCodeRepository;
 import com.rev.revpasswordmanagerp2.util.PasswordStrengthUtil;
-import com.rev.revpasswordmanagerp2.util.VerificationCodeUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import com.rev.revpasswordmanagerp2.dto.AnswerRequest;
-
 @Service
 @RequiredArgsConstructor
 public class SecurityServiceImpl implements SecurityService {
@@ -132,20 +127,6 @@ public class SecurityServiceImpl implements SecurityService {
     }
 
     @Override
-    public String toggleTwoFactor(String usernameOrEmail, boolean enabled) {
-
-        User user = userRepository
-                .findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        user.setTwoFactorEnabled(enabled);
-        userRepository.save(user);
-
-        return enabled ? "2FA Enabled" : "2FA Disabled";
-    }
-
-
-    @Override
     public boolean validateMasterPassword(String raw, String encoded) {
         return passwordEncoder.matches(raw, encoded);
     }
@@ -180,6 +161,37 @@ public class SecurityServiceImpl implements SecurityService {
             securityQuestionRepository.save(question);
         }
     }
+    @Override
+    public void updateSecurityAnswersByUsername(
+            String usernameOrEmail,
+            List<SecurityAnswerDTO> answers) {
 
+        User user = userRepository
+                .findByUsernameOrEmail(
+                        usernameOrEmail,
+                        usernameOrEmail)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found"));
 
+        for (SecurityAnswerDTO dto : answers) {
+
+            SecurityQuestion question =
+                    securityQuestionRepository
+                            .findByUserIdAndQuestion(
+                                    user.getId(),
+                                    dto.getQuestion()
+                            )
+                            .orElseThrow(() ->
+                                    new RuntimeException("Question not found"));
+
+            question.setUser(user);
+
+            question.setAnswer(
+                    dto.getAnswer(),
+                    passwordEncoder
+            );
+
+            securityQuestionRepository.save(question);
+        }
+    }
 }
