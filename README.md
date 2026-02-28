@@ -1,131 +1,115 @@
-Rev Password Manager
+# Rev Password Manager
 
-Rev Password Manager is a secure full-stack password management application designed to safely store, manage, and protect user credentials using strong encryption and multi-layer authentication.
+**Rev Password Manager** is a secure full-stack password management application designed to safely store, manage, and protect user credentials using strong encryption and multi-layer authentication.
 
 The system enables users to securely manage digital accounts while ensuring confidentiality through encrypted storage, verification mechanisms, and secure backup functionality.
 
-Project Overview
+---
 
-Rev Password Manager helps users:
+## **Project Overview**
 
-Store account credentials securely
+Rev Password Manager helps users to:
 
-Encrypt passwords before database storage
-
-Access passwords only after verification
-
-Backup and restore vault data safely
-
-Monitor password security health
+- Store account credentials securely  
+- Encrypt passwords before database storage  
+- Access passwords only after verification  
+- Backup and restore vault data safely  
+- Monitor password security health  
 
 The application follows enterprise-level security practices including authentication, encryption, verification codes, and protected vault operations.
 
-Key Features
-Authentication & Security
+---
 
-Secure User Registration & Login
+## **Key Features**
 
-JWT-based Authentication
+### **Authentication & Security**
+- Secure User Registration and Login  
+- JWT-based Authentication  
+- Master Password Protection  
+- Two-Factor Authentication (2FA)  
+- OTP Verification System  
+- Session-based Authorization  
 
-Master Password Protection
+### **Password Vault Management**
+- Add new passwords securely  
+- Update stored credentials  
+- Delete passwords safely  
+- Mark important accounts as favorites  
+- Category-based filtering  
+- Search and sorting functionality  
+- Password visibility only after verification  
 
-Two-Factor Authentication (2FA)
+### **Import & Export Backup**
+- Secure Vault Export (JSON backup)  
+- Encrypted password export  
+- Vault Import functionality  
+- Verification-code protected backup  
+- Secure data restoration  
 
-OTP Verification System
+### **Security Audit**
+- Weak Password Detection  
+- Reused Password Identification  
+- Security Score Dashboard  
+- Old Password Tracking  
 
-Session-based authorization
+### **User Profile Management**
+- Update profile details  
+- Change master password  
+- Enable or Disable Two-Factor Authentication  
+- Security question validation  
 
-Password Vault Management
+---
 
-Add new passwords securely
+## **Tech Stack**
 
-Update stored credentials
+### **Frontend (Angular)**
 
-Delete passwords safely
+| Technology | Usage |
+|------------|------|
+| Angular 21 | UI Framework |
+| Standalone Components | Modular Architecture |
+| Angular Router | Navigation |
+| Angular Material | UI Components |
+| HttpClient | API Communication |
+| JWT Interceptor | Secure Requests |
+| Custom CSS | Dark Theme UI |
 
-Favorite important accounts
+---
 
-Category-based filtering
+### **Backend (Spring Boot)**
 
-Search & sorting functionality
+| Technology | Usage |
+|------------|------|
+| Java 17 | Programming Language |
+| Spring Boot 3 | Backend Framework |
+| Spring Security | Authentication |
+| JWT | Authorization |
+| Spring Data JPA | Database ORM |
+| Hibernate | Persistence |
+| MySQL | Database |
+| BCrypt | Password Hashing |
+| AES Encryption | Vault Security |
 
-View password only after verification
+---
 
-Import & Export Backup
+## **Architecture**
 
-Secure Vault Export (JSON backup)
-
-Encrypted password export
-
-Vault Import functionality
-
-Verification-code protected backup
-
-Data restoration support
-
-Security Audit
-
-Weak Password Detection
-
-Reused Password Identification
-
-Security Score Dashboard
-
-Old password tracking
-
-User Profile Management
-
-Update profile details
-
-Change master password
-
-Enable / Disable 2FA
-
-Security question validation
-
-Tech Stack
-
-Frontend (Angular)
-Technology	Usage
-Angular 21	UI Framework
-Standalone Components	Modular Architecture
-Angular Router	Navigation
-Angular Material	UI Components
-HttpClient	API Communication
-JWT Interceptor	Secure Requests
-Custom CSS	Dark Theme UI
-
-Backend (Spring Boot)
-Technology	Usage
-Java 17	Programming Language
-Spring Boot 3	Backend Framework
-Spring Security	Authentication
-JWT	Authorization
-Spring Data JPA	Database ORM
-Hibernate	Persistence
-MySQL	Database
-BCrypt	Password Hashing
-AES Encryption	Vault Security
-
-Architecture
-
-Backend follows:
+Backend architecture follows:
 
 Controller → Service → Repository → Database
 
-Uses:
+Implemented using:
 
-DTO Pattern
+- DTO Pattern  
+- Layered Architecture  
+- Secure API Communication  
+- Encryption Utilities  
 
-Layered Architecture
+---
 
-Secure API communication
+## **Project Structure**
 
-Encryption utilities
-
-Project Structure
-
-Backend Structure
+### **Backend Structure**
 src/main/java/com/rev/revpasswordmanagerp2
 │
 ├── controller      # REST APIs
@@ -137,7 +121,8 @@ src/main/java/com/rev/revpasswordmanagerp2
 ├── config          # Application configs
 └── util            # Encryption utilities
 
-Frontend Structure
+
+### **Frontend Structure**
 src/app
 │
 ├── core
@@ -155,29 +140,23 @@ src/app
 │
 └── shared
 
-Setup & Installation
+## **Setup and Installation**
 
-Prerequisites
+### **Prerequisites**
+- Node.js (v18+)
+- Angular CLI
+- Java JDK 17+
+- Maven
+- MySQL Server
+- IntelliJ IDEA or VS Code
 
-Node.js (v18+)
+## **Backend Setup**
 
-Angular CLI
-
-Java JDK 17+
-
-Maven
-
-MySQL Server
-
-IntelliJ / VS Code
-
-Backend Setup
-
-Navigate to backend folder
+Navigate to backend directory:
 
 cd RevPasswordManagerP2
 
-Configure Database
+## **Configure Database**
 
 application.properties
 
@@ -192,29 +171,35 @@ app.encryption.secret=YourSecretKey
 
 Run Backend
 
-Using Maven:
+## **Using Maven:**
 
 mvn spring-boot:run
 
 OR from IntelliJ Run Button.
 
-Backend runs at:
+## **Backend runs at:**
 
 http://localhost:8080
 
-Frontend Setup
-Navigate to UI folder
+## **Frontend Setup**
+
+## **Navigate to UI folder**
+
 cd rev-password-manager-ui
-Install Dependencies
+
+## **Install Dependencies**
+
 npm install
-Start Application
+
+## **Start Application**
+
 ng serve
 
-Open browser:
+## **Open browser:**
 
 http://localhost:4200
 
-Important API Endpoints
+## **Important API Endpoints**
 
 Method	    Endpoint	                      Description
 POST	  /api/auth/login	                User Login
@@ -227,21 +212,16 @@ POST	  /api/vault/import	              Import Vault
 POST	  /api/security/generate-code	    Generate OTP
 POST	  /api/auth/changePassword	      Change Master Password
 
-Security Implementation
+## **Security Implementation**
 
 Password Encryption before DB storage
-
 Master password verification
-
 OTP validation before sensitive operations
-
 JWT protected APIs
-
 Secure vault export/import
-
 Role & session validation
 
-Testing Performed
+## **Testing Performed**
 
 Authentication Flow
 Vault CRUD Operations
@@ -250,14 +230,10 @@ OTP Verification
 Security Audit Checks
 Profile Management
 
-Future Enhancements
+## **Future Enhancements**
 
 Cloud Backup Integration
-
 Browser Extension Support
-
 Password Auto-fill
-
 Biometric Authentication
-
 Mobile Application
