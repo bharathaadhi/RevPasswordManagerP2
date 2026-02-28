@@ -1,0 +1,283 @@
+<div class="vault-wrapper">
+
+  <!-- ================= HEADER ================= -->
+  <div class="vault-top">
+    <div>
+      <h2>🔐 Rev Secure Vault</h2>
+      <p class="subtitle">Manage your encrypted credentials securely</p>
+    </div>
+
+    <button type="button" class="primary-btn" (click)="openAdd()">
+      + Add Password
+    </button>
+  </div>
+
+  <!-- ================= STATS ================= -->
+  <div class="vault-stats">
+
+    <div class="stat-card blue">
+      <h4>Total Passwords</h4>
+      <h1>{{ totalPasswords }}</h1>
+    </div>
+
+    <div class="stat-card red">
+      <h4>Weak Passwords</h4>
+      <h1>{{ weakCount }}</h1>
+    </div>
+
+    <div class="stat-card purple">
+      <h4>Favorites</h4>
+      <h1>{{ favoriteCount }}</h1>
+    </div>
+
+    <div class="stat-card green">
+      <h4>Security Score</h4>
+      <h1>{{ securityScore }}%</h1>
+    </div>
+
+  </div>
+
+  <!-- ================= SECURITY ALERT ================= -->
+  <div *ngIf="weakCount > 0" class="security-alert">
+    ⚠️ {{ weakCount }} weak passwords detected.
+  </div>
+
+  <!-- ================= CONTROLS ================= -->
+  <div class="vault-controls card">
+
+    <input [(ngModel)]="searchKeyword" placeholder="Search...">
+
+    <select (change)="onCategoryChange($event)">
+      <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
+    </select>
+
+    <select (change)="onSortChange($event)">
+      <option value="name">Sort by Name</option>
+      <option value="created">Sort by Date Added</option>
+      <option value="updated">Sort by Modified</option>
+    </select>
+
+    <button type="button" class="btn" (click)="search()">Search</button>
+
+    <!-- ADD THIS BUTTON -->
+    <button type="button" class="btn" (click)="loadFavorites()">
+      Favorites
+    </button>
+
+    <!-- OPTIONAL RESET BUTTON -->
+    <button type="button" class="btn" (click)="loadVault()">
+      All
+    </button>
+
+  </div>
+
+  <!-- ================= PASSWORD GRID ================= -->
+  <div class="vault-grid" *ngIf="passwords.length > 0">
+
+    <div class="vault-card" *ngFor="let p of passwords">
+      <div class="card-header">
+
+        <div>
+          <h3>{{ p.accountName }}</h3>
+          <p class="website">{{ p.website }}</p>
+        </div>
+
+        <span class="favorite" [class.active]="p.favorite" (click)="toggleFavorite(p)">
+          ⭐
+        </span>
+
+      </div>
+
+      <p class="username">{{ p.username }}</p>
+
+
+      <div class="vault-actions">
+        <button type="button" (click)="openView(p.id)">View</button>
+        <button type="button" (click)="openEdit(p)">Edit</button>
+        <button type="button" class="danger" (click)="openDelete(p.id)">
+          Delete
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+
+  <p *ngIf="passwords.length === 0" class="no-data">
+    No passwords found.
+  </p>
+
+</div>
+
+
+<!-- ================= ADD PASSWORD MODAL ================= -->
+
+<div *ngIf="showAdd" class="modal-overlay">
+
+  <div class="modal-box">
+
+    <h3>Add Password</h3>
+
+    <input [(ngModel)]="newPassword.accountName" placeholder="Account Name">
+
+    <input [(ngModel)]="newPassword.website" placeholder="Website URL">
+
+    <input [(ngModel)]="newPassword.username" placeholder="Username">
+
+    <input [(ngModel)]="newPassword.password" (input)="checkStrength(newPassword.password)" placeholder="Password">
+
+    <select [(ngModel)]="newPassword.category">
+      <option *ngFor="let c of categories" [value]="c">
+        {{ c }}
+      </option>
+    </select>
+
+    <textarea [(ngModel)]="newPassword.notes" placeholder="Notes (optional)">
+</textarea>
+
+    <p *ngIf="passwordStrength">
+      Strength: {{ passwordStrength }}
+    </p>
+
+    <div style="display:flex; gap:10px; margin-top:10px;">
+
+      <button type="button" class="primary-btn" (click)="savePassword()">
+        Save
+      </button>
+
+      <button type="button" class="secondary-btn" (click)="closeAdd()">Cancel</button>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ================= VIEW PASSWORD MODAL ================= -->
+
+<div *ngIf="showViewModal" class="modal-overlay">
+
+  <div class="modal-box">
+
+    <h3>🔐 Verify Master Password</h3>
+
+    <!-- MASTER PASSWORD -->
+    <div class="password-field">
+
+      <input [type]="showMasterPassword ? 'text' : 'password'" [(ngModel)]="masterPasswordInput"
+        placeholder="Enter Master Password" />
+
+    <span class="eye" (click)="togglePassword()">
+
+      <i class="fa" [ngClass]="showMasterPassword ? 'fa-eye-slash' : 'fa-eye'">
+      </i>
+
+    </span>
+
+  </div>
+
+  <!-- GET CODE -->
+  <button type="button" class="primary-btn" (click)="generateViewCode()">
+    Get Verification Code
+  </button>
+
+  <!-- VERIFICATION CODE -->
+  <input type="text" placeholder="Enter Verification Code" [(ngModel)]="viewVerificationCode">
+
+  <!-- ACTION BUTTONS (MOVED DOWN) -->
+  <div class="modal-actions">
+
+    <button class="primary-btn" [disabled]="isVerifying" (click)="verifyAndView()">
+
+      {{ isVerifying ? 'Verifying...' : 'Verify' }}
+
+    </button>
+
+    <button class="secondary-btn" (click)="closeView()">
+      Cancel
+    </button>
+
+  </div>
+
+  <!-- SHOW PASSWORD -->
+  <div *ngIf="showPassword" class="revealed-password">
+    🔓 Password: <strong>{{ decryptedPassword }}</strong>
+  </div>
+
+</div>
+
+</div>
+
+
+
+<!-- ================= EDIT PASSWORD MODAL ================= -->
+
+<div *ngIf="showEditModal" class="modal-overlay">
+
+  <div class="modal-box">
+
+    <h3>Edit Password</h3>
+
+    <input [(ngModel)]="editPassword.accountName" placeholder="Account Name">
+
+    <input [(ngModel)]="editPassword.website" placeholder="Website URL">
+
+    <input [(ngModel)]="editPassword.username" placeholder="Username">
+
+    <input [(ngModel)]="editPassword.password" placeholder="New Password (leave blank to keep same)">
+
+    <select [(ngModel)]="editPassword.category">
+      <option *ngFor="let c of categories" [value]="c">
+        {{ c }}
+      </option>
+    </select>
+
+    <textarea [(ngModel)]="editPassword.notes" placeholder="Notes"></textarea>
+
+    <div style="display:flex; gap:10px; margin-top:10px;">
+
+      <button type="button" class="primary-btn" (click)="updatePassword()">
+        Update
+      </button>
+
+      <button type="button" class="secondary-btn" (click)="showEditModal = false">
+        Cancel
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!--=================SECURE DELETE MODAL=================-->
+
+<div *ngIf="showDeleteModal" class="modal-overlay">
+
+  <div class="modal-box">
+
+    <h3>🔐 Secure Delete</h3>
+
+    <input type="password" placeholder="Enter Master Password" [(ngModel)]="deleteMasterPassword">
+
+    <button class="primary-btn" (click)="generateViewCode()">
+      Get Verification Code
+    </button>
+
+    <input type="text" placeholder="Enter Verification Code" [(ngModel)]="deleteVerificationCode">
+
+    <div class="modal-actions">
+
+      <button class="danger-btn" (click)="confirmDelete()">
+        Confirm Delete
+      </button>
+
+      <button class="secondary-btn" (click)="showDeleteModal=false">
+        Cancel
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
