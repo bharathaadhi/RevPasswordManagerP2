@@ -5,7 +5,6 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 
-
 @Component({
   selector: 'app-vault-home',
   standalone: true,
@@ -16,33 +15,48 @@ import { finalize } from 'rxjs/operators';
 export class VaultHomeComponent implements OnInit {
 
   passwords: any[] = [];
+  allPasswords: any[] = [];
 
   totalPasswords = 0;
   weakCount = 0;
   favoriteCount = 0;
   securityScore = 0;
 
+  /* ================= TOAST ================= */
+
+  toastMessage = '';
+  toastType = '';
+
+  /* ================= FORM ERROR ================= */
+
+  formError = '';
+  viewError = '';
+
+  /* ================= MODALS ================= */
+
   showAdd = false;
   showViewModal = false;
   showEditModal = false;
+  showDeleteModal = false;
+
   isVerifying = false;
   showPassword = false;
+  showDeletePassword = false;
   showMasterPassword = false;
 
   selectedEntryId: number | null = null;
+  deleteEntryId: number | null = null;
+  editingId: number | null = null;
+
   masterPasswordInput = '';
-  masterPassword: string = '';
   decryptedPassword = '';
   viewVerificationCode = '';
 
-  showDeleteModal = false;
-  deleteEntryId: number | null = null;
-
   deleteMasterPassword = '';
   deleteVerificationCode = '';
+  deleteError = '';
 
   searchKeyword = '';
-
   passwordStrength = '';
 
   categories = [
@@ -63,8 +77,6 @@ export class VaultHomeComponent implements OnInit {
     category: 'SOCIAL_MEDIA',
     notes: ''
   };
-
-  editingId: number | null = null;
 
   editPassword: any = {
     accountName: '',
@@ -93,23 +105,49 @@ export class VaultHomeComponent implements OnInit {
     this.loadVault();
 
     this.route.queryParams.subscribe(params => {
+
+      /* GENERATED PASSWORD FROM GENERATOR */
+
+      if (params['generatedPassword']) {
+
+        setTimeout(() => {
+
+          this.openAdd();
+          this.newPassword.password = params['generatedPassword'];
+
+        });
+
+      }
+
+      /* WEAK PASSWORD FILTER */
+
       if (params['filter'] === 'weak') {
         this.loadWeakPasswords(user);
       }
-      else if (params['filter'] === 'favorite') {
+
+      /* FAVORITES FILTER */
+
+      if (params['filter'] === 'favorite') {
         this.loadFavorites();
       }
+
     });
 
-    const generated = localStorage.getItem('generatedPassword');
-    if (generated) {
-      this.newPassword.password = generated;
-      this.showAdd = true;
-      localStorage.removeItem('generatedPassword');
-    }
   }
 
-  // ================= LOAD =================
+  /* ================= TOAST FUNCTION ================= */
+
+  showToast(message: string, type: string) {
+
+    this.toastMessage = message;
+    this.toastType = type;
+
+    setTimeout(() => {
+      this.toastMessage = '';
+    }, 3000);
+  }
+
+  /* ================= LOAD VAULT ================= */
 
   loadVault() {
 
@@ -117,182 +155,285 @@ export class VaultHomeComponent implements OnInit {
     if (!user) return;
 
     this.api.getVault().subscribe({
+
       next: (res: any[]) => {
 
-        console.log("Vault loaded:", res);
-
+        this.allPasswords = [...res];
         this.passwords = [...res];
-        this.totalPasswords = res.length;
-        this.favoriteCount = res.filter(p => p.favorite).length;
+
+        /* update stats */
+
+        this.totalPasswords = this.allPasswords.length;
+
+        this.favoriteCount =
+          this.allPasswords.filter(p => p.favorite).length;
+
+        this.weakCount =
+          this.allPasswords.filter(p => p.strength === 'Weak').length;
+
+        /* calculate security score */
+
+        if (this.totalPasswords > 0) {
+
+          const strongCount =
+            this.allPasswords.filter(p => p.strength === 'Strong').length;
+
+          this.securityScore =
+            Math.round((strongCount / this.totalPasswords) * 100);
+
+        } else {
+
+          this.securityScore = 0;
+
+        }
 
         this.cd.detectChanges();
-      },
-      error: () => alert('Failed to load vault')
+
+      }
+
     });
 
     this.api.getSecurityReport(user).subscribe({
+
       next: (report: any) => {
+
         this.weakCount = report.weakPasswords;
         this.securityScore = report.securityScore;
 
-        this.cd.detectChanges();
       }
+
     });
+
   }
 
-  // ================= SORT =================
+  /* ================= CATEGORY FILTER ================= */
+  onCategoryChange(event: Event) {
+
+    const category = (event.target as HTMLSelectElement).value;
+
+    if (category === 'ALL') {
+
+      this.passwords = [...this.allPasswords];
+      return;
+
+    }
+
+    this.passwords = this.allPasswords.filter(p =>
+      p.category === category
+    );
+
+  }
+  /* ================= SORT ================= */
 
   onSortChange(event: Event) {
-    const selectElement = event.target as HTMLSelectElement;
-    this.sort(selectElement.value);
+
+    const sortBy = (event.target as HTMLSelectElement).value;
+
+    if (sortBy === 'name') {
+
+      this.passwords = [...this.passwords].sort((a, b) =>
+        a.accountName.localeCompare(b.accountName)
+      );
+
+    }
+
+    if (sortBy === 'created') {
+
+      this.passwords = [...this.passwords].sort((a, b) =>
+        new Date(b.createdAt).getTime() -
+        new Date(a.createdAt).getTime()
+      );
+
+    }
+
+    if (sortBy === 'updated') {
+
+      this.passwords = [...this.passwords].sort((a, b) =>
+        new Date(b.updatedAt).getTime() -
+        new Date(a.updatedAt).getTime()
+      );
+
+    }
+
   }
 
-  // ================= ADD =================
+  /* ================= SEARCH ================= */
 
-  openAdd() { this.showAdd = true; }
+  search() {
+
+    if (!this.searchKeyword) {
+
+      this.passwords = [...this.allPasswords];
+      return;
+
+    }
+
+    const keyword = this.searchKeyword.toLowerCase();
+
+    this.passwords = this.allPasswords.filter(p =>
+      p.accountName?.toLowerCase().includes(keyword) ||
+      p.website?.toLowerCase().includes(keyword) ||
+      p.username?.toLowerCase().includes(keyword)
+    );
+
+  }
+
+  /* ================= FAVORITES ================= */
+
+  loadFavorites() {
+
+    this.passwords = this.allPasswords.filter(p => p.favorite);
+
+  }
+
+  /* ================= WEAK PASSWORDS ================= */
+
+  loadWeakPasswords(user: string) {
+
+    this.api.getWeakPasswords(user)
+      .subscribe(res => this.passwords = res || []);
+
+  }
+
+  /* ================= ADD PASSWORD ================= */
+
+  openAdd() {
+
+    this.showAdd = true;
+    this.formError = '';
+
+    this.newPassword = {
+      accountName: '',
+      website: '',
+      username: '',
+      password: '',
+      category: 'SOCIAL_MEDIA',
+      notes: ''
+    };
+
+  }
 
   closeAdd() {
+
     this.showAdd = false;
+    this.formError = '';
     this.passwordStrength = '';
+
   }
 
   savePassword() {
 
-    const user = localStorage.getItem('username');
-    if (!user) {
-      alert('User not found');
+    this.formError = '';
+
+    if (!this.newPassword.accountName ||
+      !this.newPassword.username ||
+      !this.newPassword.password) {
+
+      this.formError =
+        "Account Name, Username and Password are required";
+
       return;
     }
+
+    const user = localStorage.getItem('username');
+    if (!user) return;
 
     this.api.addPassword({
       usernameOrEmail: user,
       ...this.newPassword
     }).subscribe({
+
       next: () => {
+
         this.showAdd = false;
-        this.newPassword = {
-          accountName: '',
-          website: '',
-          username: '',
-          password: '',
-          category: 'SOCIAL_MEDIA',
-          notes: ''
-        };
-        this.passwordStrength = '';
+
+        this.showToast(
+          "Password added successfully",
+          "toast-success"
+        );
+
         this.loadVault();
+
       },
-      error: () => alert('Failed to add password')
+
+      error: () => {
+
+        this.showToast(
+          "Failed to add password",
+          "toast-error"
+        );
+
+      }
+
     });
+
   }
 
-  // ================= DELETE =================
+  /* ================= DELETE ================= */
+
   openDelete(id: number) {
+
     this.deleteEntryId = id;
+
+    this.deleteMasterPassword = '';
+    this.deleteVerificationCode = '';
+    this.deleteError = '';
+
     this.showDeleteModal = true;
-  }
 
-  generateViewCode() {
-
-    const user = localStorage.getItem('username');
-    if (!user) return;
-
-    this.api.generateVerificationCode(user)
-      .subscribe(res => {
-
-        alert(`
-📧 REV PASSWORD MANAGER EMAIL
-
-To: ${res.email}
-
-Your verification code is:
-👉 ${res.code}
-
-This code expires in 5 minutes.
-`);
-
-      });
   }
 
   confirmDelete() {
+
+    this.deleteError = '';
+
+    if (!this.deleteMasterPassword || !this.deleteVerificationCode) {
+
+      this.deleteError = "Master password and verification code are required";
+      return;
+
+    }
 
     const user = localStorage.getItem('username');
     if (!user || !this.deleteEntryId) return;
 
     this.api.secureDeletePassword({
+
       entryId: this.deleteEntryId,
       usernameOrEmail: user,
       masterPassword: this.deleteMasterPassword,
       verificationCode: this.deleteVerificationCode
+
     }).subscribe({
+
       next: () => {
-        alert("Password Deleted");
+
         this.showDeleteModal = false;
+
+        this.deleteMasterPassword = '';
+        this.deleteVerificationCode = '';
+        this.deleteError = '';
+
+        this.showToast(
+          "Password deleted successfully",
+          "toast-success"
+        );
+
         this.loadVault();
+
       },
-      error: () => alert("Delete Failed")
+
+      error: () => {
+
+        this.deleteError = "Invalid master password or verification code";
+
+      }
+
     });
-  }
-
-  // ================= FAVORITE =================
-
-  // ================= FAVORITE =================
-
-  toggleFavorite(p: any) {
-
-    this.api.favoritePassword(p.id, !p.favorite)
-      .subscribe({
-        next: () => {
-
-          this.loadVault();
-
-        },
-        error: () => alert("Failed to update favorite")
-      });
 
   }
 
-  // ================= SEARCH =================
-
-  search() {
-
-    const user = localStorage.getItem('username');
-    if (!user || !this.searchKeyword) return;
-
-    this.api.searchVault(user, this.searchKeyword)
-      .subscribe(res => this.passwords = res);
-  }
-
-  // ================= FILTER =================
-
-  onCategoryChange(event: Event) {
-
-    const selectElement = event.target as HTMLSelectElement;
-    const category = selectElement.value;
-    const user = localStorage.getItem('username');
-
-    if (!user) return;
-
-    if (category === 'ALL') {
-      this.loadVault();
-      return;
-    }
-
-    this.api.filterVault(user, category)
-      .subscribe(res => this.passwords = res);
-  }
-
-  // ================= SORT =================
-
-  sort(sortBy: string) {
-
-    const user = localStorage.getItem('username');
-    if (!user) return;
-
-    this.api.sortVault(user, sortBy)
-      .subscribe(res => this.passwords = res);
-  }
-
-  // ================= VIEW =================
+  /* ================= VIEW PASSWORD ================= */
 
   openView(id: number) {
 
@@ -301,11 +442,10 @@ This code expires in 5 minutes.
     this.masterPasswordInput = '';
     this.viewVerificationCode = '';
     this.decryptedPassword = '';
-
     this.showPassword = false;
-    this.isVerifying = false;
 
     this.showViewModal = true;
+
   }
 
   closeView() {
@@ -316,8 +456,6 @@ This code expires in 5 minutes.
     this.viewVerificationCode = '';
     this.decryptedPassword = '';
 
-    this.selectedEntryId = null;
-    this.showPassword = false;
   }
 
   verifyAndView() {
@@ -325,50 +463,82 @@ This code expires in 5 minutes.
     const user = localStorage.getItem('username');
     if (!user || !this.selectedEntryId) return;
 
-    this.isVerifying = true;
+    this.viewError = '';
+
+    /* FRONTEND VALIDATION */
+
+    if (!this.masterPasswordInput || !this.viewVerificationCode) {
+
+      this.viewError = "Master password and verification code required";
+      return;
+
+    }
+
+    this.isVerifying = false;
 
     this.api.viewPassword({
+
       entryId: this.selectedEntryId,
       usernameOrEmail: user,
       masterPassword: this.masterPasswordInput,
       verificationCode: this.viewVerificationCode
+
     })
-      .pipe(
-        finalize(() => {
-          // ALWAYS STOP LOADER
-          this.isVerifying = false;
-          this.cd.detectChanges();
-        })
-      )
+      .pipe(finalize(() => this.isVerifying = false))
       .subscribe({
 
         next: (res: any) => {
 
-          console.log("VIEW RESPONSE:", res);
-
-          if (res && res.decryptedPassword) {
+          if (res?.decryptedPassword) {
 
             this.decryptedPassword = res.decryptedPassword;
             this.showPassword = true;
 
-          } else {
-            alert("Password not received");
+            this.cd.detectChanges();
+
           }
 
-          this.viewVerificationCode = '';
         },
 
-        error: (err) => {
+        error: () => {
 
-          console.error("VERIFY ERROR:", err);
-          alert(err?.error?.message || "Verification Failed");
+          this.viewError = "Invalid master password or verification code";
 
         }
 
       });
+
   }
 
-  // ================= EDIT =================
+  /* ================= GENERATE CODE ================= */
+
+  generateViewCode() {
+
+    const user = localStorage.getItem('username');
+    if (!user) return;
+
+    this.api.generateVerificationCode(user)
+      .subscribe({
+
+        next: (res: any) => {
+
+          alert(`
+📧 REV PASSWORD MANAGER EMAIL
+
+To: ${res.email}
+
+Verification Code: ${res.code}
+
+Expires in 5 minutes.
+`);
+
+        }
+
+      });
+
+  }
+
+  /* ================= EDIT ================= */
 
   openEdit(p: any) {
 
@@ -384,6 +554,7 @@ This code expires in 5 minutes.
     };
 
     this.showEditModal = true;
+
   }
 
   updatePassword() {
@@ -393,15 +564,39 @@ This code expires in 5 minutes.
     const user = localStorage.getItem('username');
 
     this.api.updatePassword(this.editingId, {
+
       usernameOrEmail: user,
       ...this.editPassword
-    }).subscribe(() => {
-      this.showEditModal = false;
-      this.loadVault();
+
+    }).subscribe({
+
+      next: () => {
+
+        this.showEditModal = false;
+
+        this.showToast(
+          "Password updated successfully",
+          "toast-success"
+        );
+
+        this.loadVault();
+
+      },
+
+      error: () => {
+
+        this.showToast(
+          "Update failed",
+          "toast-error"
+        );
+
+      }
+
     });
+
   }
 
-  // ================= STRENGTH =================
+  /* ================= PASSWORD STRENGTH ================= */
 
   checkStrength(password: string) {
 
@@ -421,47 +616,57 @@ This code expires in 5 minutes.
     if (score <= 2) this.passwordStrength = 'Weak';
     else if (score <= 4) this.passwordStrength = 'Medium';
     else this.passwordStrength = 'Strong';
-  }
 
-  loadFavorites() {
-
-    const user = localStorage.getItem('username');
-    if (!user) return;
-
-    this.api.getFavorites()
-      .subscribe({
-        next: (res: any[]) => {
-
-          this.passwords = res;
-
-          this.favoriteCount = res.length;
-
-          this.cd.detectChanges();
-        },
-        error: () => alert("Failed to load favorites")
-      });
-
-  }
-
-  loadWeakPasswords(user: string) {
-
-    this.api.getWeakPasswords(user).subscribe({
-      next: (res: any[]) => {
-        this.passwords = res || [];
-      },
-      error: () => alert('Failed to load weak passwords')
-    });
-
-    this.api.getSecurityReport(user).subscribe({
-      next: (report: any) => {
-        this.totalPasswords = report.totalPasswords;
-        this.weakCount = report.weakPasswords;
-        this.securityScore = report.securityScore;
-      }
-    });
   }
 
   togglePassword() {
     this.showMasterPassword = !this.showMasterPassword;
   }
+
+  toggleFavorite(p: any) {
+
+    const newValue = !p.favorite;
+
+    this.api.favoritePassword(p.id, newValue)
+      .subscribe({
+
+        next: () => {
+
+          p.favorite = newValue;
+
+          /* update master list */
+
+          const index = this.allPasswords.findIndex(x => x.id === p.id);
+
+          if (index !== -1) {
+            this.allPasswords[index].favorite = newValue;
+          }
+
+          this.favoriteCount =
+            this.allPasswords.filter(x => x.favorite).length;
+
+          this.showToast(
+            "Favorite updated",
+            "toast-success"
+          );
+
+        },
+
+        error: () => {
+
+          this.showToast(
+            "Favorite update failed",
+            "toast-error"
+          );
+
+        }
+
+      });
+
+  }
+
+  toggleDeletePassword() {
+    this.showDeletePassword = !this.showDeletePassword;
+  }
+
 }

@@ -32,6 +32,6 @@ export class NavbarComponent {
   logout() {
     localStorage.removeItem('token');
     sessionStorage.clear();
-    this.router.navigate(['/login']);
+    this.router.navigateByUrl('/login', { replaceUrl: true });
   }
 }

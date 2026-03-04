@@ -13,11 +13,11 @@ import { ApiService } from '../../../core/services/api.service';
 })
 export class RegisterComponent {
 
-  /* ================= STEP FLOW ================= */
-
   step = 1;
-
   showPassword = false;
+
+  successMessage = '';
+  errorMessage = '';
 
   securityQuestionOptions = [
     'What is your first school name?',
@@ -45,29 +45,24 @@ export class RegisterComponent {
     private router: Router
   ) { }
 
-  /* ================= UI FUNCTIONS ================= */
-
   togglePassword(): void {
     this.showPassword = !this.showPassword;
   }
 
-  /* ===== SAFE LOGIN NAVIGATION ===== */
-
   goToLogin(): void {
-    this.router.navigateByUrl('/login'); // more reliable than navigate()
+    this.router.navigateByUrl('/login');
   }
-
-  /* ================= STEP CONTROL ================= */
 
   nextStep(): void {
 
     const { username, email, masterPassword } = this.registerData;
 
     if (!username?.trim() || !email?.trim() || !masterPassword?.trim()) {
-      alert('Please fill all required fields');
+      this.errorMessage = 'Please fill all required fields';
       return;
     }
 
+    this.errorMessage = '';
     this.step = 2;
   }
 
@@ -75,21 +70,17 @@ export class RegisterComponent {
     this.step = 1;
   }
 
-  /* ================= REGISTER ================= */
-
   register(): void {
 
-    // Check empty questions
     const hasEmpty = this.registerData.securityQuestions.some(
       q => !q.question || !q.answer?.trim()
     );
 
     if (hasEmpty) {
-      alert('Please complete all security questions');
+      this.errorMessage = 'Please complete all security questions';
       return;
     }
 
-    // Check duplicates
     const selectedQuestions =
       this.registerData.securityQuestions.map(q => q.question);
 
@@ -97,7 +88,7 @@ export class RegisterComponent {
       new Set(selectedQuestions).size !== selectedQuestions.length;
 
     if (hasDuplicate) {
-      alert('Please select different security questions');
+      this.errorMessage = 'Please select different security questions';
       return;
     }
 
@@ -105,13 +96,16 @@ export class RegisterComponent {
 
       next: (res: any) => {
 
-        alert(res.message);
+        this.errorMessage = '';
+        this.successMessage = res.message || "User registered successfully!";
 
-          this.router.navigate(['/login']);
+        this.step = 3;   
       },
 
       error: (err) => {
-        alert(err.error.message);
+        this.successMessage = '';
+        this.errorMessage =
+          err?.error?.message || "Registration failed";
       }
 
     });

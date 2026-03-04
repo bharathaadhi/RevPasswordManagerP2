@@ -26,16 +26,19 @@ export class ForgotPasswordComponent {
   showPassword = false;
   showConfirmPassword = false;
 
+  successMessage = '';
+  errorMessage = '';
+
   constructor(
     private api: ApiService,
     private router: Router
-  ) {}
+  ) { }
 
   // ================= STEP 1 =================
   verifyUser() {
 
     if (!this.usernameOrEmail) {
-      alert("Enter username/email");
+      this.errorMessage = "Enter username/email";
       return;
     }
 
@@ -45,16 +48,17 @@ export class ForgotPasswordComponent {
         next: (q: string[]) => {
 
           if (!q || q.length === 0) {
-            alert("Security questions not configured");
+            this.errorMessage = "Security questions not configured";
             return;
           }
 
-          this.questions = q.slice(0,3);
+          this.errorMessage = '';
+          this.questions = q.slice(0, 3);
           this.step = 2;
         },
 
         error: () => {
-          alert("User not found");
+          this.errorMessage = "User not found";
         }
       });
   }
@@ -62,14 +66,14 @@ export class ForgotPasswordComponent {
   // ================= STEP 2 =================
   verifyAnswer() {
 
-    const valid =
-      this.answers.some(a => a?.trim());
+    const valid = this.answers.some(a => a?.trim());
 
     if (!valid) {
-      alert("Answer at least one question");
+      this.errorMessage = "Answer at least one question";
       return;
     }
 
+    this.errorMessage = '';
     this.step = 3;
   }
 
@@ -77,51 +81,55 @@ export class ForgotPasswordComponent {
   resetPassword() {
 
     if (!this.newPassword || !this.confirmPassword) {
-      alert("Enter password");
+      this.errorMessage = "Enter password";
       return;
     }
 
     if (this.newPassword !== this.confirmPassword) {
-      alert("Passwords not matching");
+      this.errorMessage = "Passwords not matching";
       return;
     }
 
     const securityQuestions =
-      this.questions.map((q,i)=>({
-        question:q,
-        answer:this.answers[i]
+      this.questions.map((q, i) => ({
+        question: q,
+        answer: this.answers[i]
       }))
-      .filter(a=>a.answer?.trim());
+        .filter(a => a.answer?.trim());
 
     this.api.forgotPassword({
-        usernameOrEmail:this.usernameOrEmail,
-        newPassword:this.newPassword,
-        securityQuestions
+      usernameOrEmail: this.usernameOrEmail,
+      newPassword: this.newPassword,
+      securityQuestions
     })
-    .subscribe({
+      .subscribe({
 
-      next:(res:any)=>{
+        next: (res: any) => {
 
-        alert(res.message);
+          this.errorMessage = '';
+          this.successMessage = res.message || "Password reset successful!";
 
-        this.router.navigate(['/login']);
-      },
+          this.step = 4;
+        },
 
-      error:(err)=>{
-
-        alert(
-          err?.error?.message ||
-          "Password reset failed"
-        );
-      }
-    });
+        error: (err) => {
+          this.successMessage = '';
+          this.errorMessage =
+            err?.error?.message ||
+            "Password reset failed";
+        }
+      });
   }
 
-  togglePassword(){
-    this.showPassword=!this.showPassword;
+  togglePassword() {
+    this.showPassword = !this.showPassword;
   }
 
-  toggleConfirmPassword(){
-    this.showConfirmPassword=!this.showConfirmPassword;
+  toggleConfirmPassword() {
+    this.showConfirmPassword = !this.showConfirmPassword;
+  }
+
+  goToLogin() {
+    this.router.navigate(['/login']);
   }
 }

@@ -1,14 +1,13 @@
-import { Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, ChangeDetectorRef } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef } from '@angular/core';
 import { ApiService } from '../../../core/services/api.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
@@ -24,6 +23,9 @@ export class LoginComponent {
   enteredOtp = '';
   otpUser = '';
 
+  errorMessage = '';
+  successMessage = '';
+
   constructor(
     private api: ApiService,
     private router: Router,
@@ -36,80 +38,78 @@ export class LoginComponent {
 
   /* ================= LOGIN ================= */
 
- login() {
+  login() {
 
-  if (!this.usernameOrEmail || !this.password) {
-    alert("Enter credentials");
-    return;
-  }
+    this.errorMessage = '';
+    this.successMessage = '';
 
-  this.loading = true;
+    if (!this.usernameOrEmail || !this.password) {
+      this.errorMessage = "Enter credentials";
+      return;
+    }
 
-  this.api.login({
-    usernameOrEmail: this.usernameOrEmail,
-    masterPassword: this.password
-  })
-  .subscribe({
+    this.loading = true;
+    this.cd.detectChanges();   // 🔥 force UI refresh
 
-    next: (res: any) => {
+    this.api.login({
+      usernameOrEmail: this.usernameOrEmail,
+      masterPassword: this.password
+    })
+    .subscribe({
 
-      this.loading = false;
+      next: (res: any) => {
 
-      this.cd.detectChanges();
-
-      if (res.twoFactorRequired) {
-
-        this.otpUser = res.username;
-
-        alert("Verification Code: " + res.code);
-
-        this.showOtpModal = true;
-
+        this.loading = false;
         this.cd.detectChanges();
 
-        return;
+        if (res.twoFactorRequired) {
+
+          this.otpUser = res.username;
+          this.showOtpModal = true;
+          this.cd.detectChanges();
+          return;
+        }
+
+        this.successMessage = "Login successful";
+        this.loginSuccess(res);
+      },
+
+      error: (err) => {
+
+        this.loading = false;
+
+        this.errorMessage =
+          err?.error?.message || "Invalid credentials";
+
+        this.cd.detectChanges();   // 🔥 force Angular refresh
+
       }
-
-      this.loginSuccess(res);
-    },
-
-    error: (err) => {
-
-      this.loading = false;
-      this.cd.detectChanges();
-
-      alert(
-        err?.error?.message ||
-        "Invalid credentials"
-      );
-    }
-  });
-}
+    });
+  }
 
   /* ================= VERIFY OTP ================= */
 
   verifyOtp() {
 
     if (!this.enteredOtp) {
-      alert("Enter OTP");
+      this.errorMessage = "Enter OTP";
       return;
     }
 
-    this.api.verify2FA(
-      this.otpUser,
-      this.enteredOtp
-    ).subscribe({
+    this.api.verify2FA(this.otpUser, this.enteredOtp)
+      .subscribe({
 
-      next: (res: any) => {
+        next: (res: any) => {
 
-        this.showOtpModal = false;
-        this.loginSuccess(res);
-      },
+          this.showOtpModal = false;
+          this.loginSuccess(res);
+        },
 
-      error: () => {
-        alert("Invalid OTP");
-      }
-    });
+        error: () => {
+          this.errorMessage = "Invalid OTP";
+          this.cd.detectChanges();
+        }
+      });
   }
 
   /* ================= SUCCESS ================= */

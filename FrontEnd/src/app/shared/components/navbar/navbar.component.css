@@ -142,3 +142,13 @@
 .logout:hover {
   background:#ef4444;
 }
+
+/* FIX DROPDOWN CLICK ISSUE */
+.navbar {
+  position: relative;
+  z-index: 1000;   /* higher than dashboard */
+}
+
+.dropdown {
+  z-index: 2000;   /* extra safety */
+}

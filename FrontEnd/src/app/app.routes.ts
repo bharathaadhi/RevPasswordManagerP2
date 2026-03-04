@@ -38,6 +38,7 @@ export const routes: Routes = [
     path: '',
     component: LayoutComponent,
     canActivate: [authGuard],
+    runGuardsAndResolvers: 'always',
     children: [
 
       {

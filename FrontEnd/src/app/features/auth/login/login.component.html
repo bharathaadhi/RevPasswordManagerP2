@@ -41,6 +41,16 @@
         Login using your Master Credentials
       </p>
 
+      <!-- SUCCESS MESSAGE -->
+      <div *ngIf="successMessage" class="success-msg">
+        {{ successMessage }}
+      </div>
+
+      <!-- ERROR MESSAGE -->
+      <div *ngIf="errorMessage" class="error-msg">
+        {{ errorMessage }}
+      </div>
+
       <form (ngSubmit)="login()" autocomplete="off">
 
         <!-- USERNAME -->

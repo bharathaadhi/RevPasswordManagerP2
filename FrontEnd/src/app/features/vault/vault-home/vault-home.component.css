@@ -399,3 +399,68 @@
 .eye:hover {
   color: #ffffff;
 }
+
+.error-msg{
+  background:#ff4d4f;
+  color:white;
+  padding:10px;
+  border-radius:6px;
+  margin-bottom:10px;
+  font-size:14px;
+  text-align:center;
+}
+
+/* TOAST CONTAINER */
+
+.toast-container{
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 2000;
+}
+
+/* TOAST BOX */
+
+.toast-message{
+  padding: 14px 22px;
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+  animation: slideIn 0.3s ease;
+}
+
+/* SUCCESS */
+
+.toast-success{
+  background: #22c55e;
+}
+
+/* ERROR */
+
+.toast-error{
+  background: #ef4444;
+}
+
+/* ANIMATION */
+
+@keyframes slideIn{
+  from{
+    transform: translateX(100%);
+    opacity:0;
+  }
+  to{
+    transform: translateX(0);
+    opacity:1;
+  }
+}
+
+.form-error{
+background:#ef4444;
+color:white;
+padding:10px;
+border-radius:6px;
+margin-bottom:12px;
+font-size:13px;
+text-align:center;
+}

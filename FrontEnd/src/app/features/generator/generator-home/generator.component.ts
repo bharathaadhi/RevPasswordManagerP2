@@ -16,7 +16,7 @@ export class GeneratorHomeComponent {
   constructor(
     private router: Router,
     private api: ApiService
-  ) {}
+  ) { }
 
   length = 16;
   count = 5;
@@ -71,44 +71,43 @@ export class GeneratorHomeComponent {
 
   saveToVault() {
 
-    if (!this.selectedPassword) {
-      alert('Select a password first');
-      return;
-    }
+    this.router.navigate(['/vault'], {
+      queryParams: {
+        generatedPassword: this.selectedPassword
+      }
+    });
 
-    localStorage.setItem('generatedPassword', this.selectedPassword);
-    this.router.navigate(['/vault']);
   }
   // ================= PREMIUM ANALYZER HELPERS =================
 
-get strengthPercent(): number {
+  get strengthPercent(): number {
 
-  if (!this.selectedPassword) return 0;
+    if (!this.selectedPassword) return 0;
 
-  let score = 0;
+    let score = 0;
 
-  if (this.selectedPassword.length >= 8) score++;
-  if (/[A-Z]/.test(this.selectedPassword)) score++;
-  if (/[a-z]/.test(this.selectedPassword)) score++;
-  if (/[0-9]/.test(this.selectedPassword)) score++;
-  if (/[^A-Za-z0-9]/.test(this.selectedPassword)) score++;
+    if (this.selectedPassword.length >= 8) score++;
+    if (/[A-Z]/.test(this.selectedPassword)) score++;
+    if (/[a-z]/.test(this.selectedPassword)) score++;
+    if (/[0-9]/.test(this.selectedPassword)) score++;
+    if (/[^A-Za-z0-9]/.test(this.selectedPassword)) score++;
 
-  return score * 20;
-}
+    return score * 20;
+  }
 
-hasUpper() {
-  return /[A-Z]/.test(this.selectedPassword);
-}
+  hasUpper() {
+    return /[A-Z]/.test(this.selectedPassword);
+  }
 
-hasLower() {
-  return /[a-z]/.test(this.selectedPassword);
-}
+  hasLower() {
+    return /[a-z]/.test(this.selectedPassword);
+  }
 
-hasNumber() {
-  return /[0-9]/.test(this.selectedPassword);
-}
+  hasNumber() {
+    return /[0-9]/.test(this.selectedPassword);
+  }
 
-hasSymbol() {
-  return /[^A-Za-z0-9]/.test(this.selectedPassword);
-}
+  hasSymbol() {
+    return /[^A-Za-z0-9]/.test(this.selectedPassword);
+  }
 }
