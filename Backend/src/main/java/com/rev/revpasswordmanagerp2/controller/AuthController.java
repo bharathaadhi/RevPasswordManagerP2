@@ -58,18 +58,29 @@ public class AuthController {
                 .findByUsernameOrEmail(
                         request.getUsernameOrEmail(),
                         request.getUsernameOrEmail())
-                .orElseThrow(() ->
-                        new RuntimeException("User not found"));
+                .orElse(null);
 
-        /* ===== PASSWORD CHECK ===== */
+        if (user == null) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(Map.of(
+                            "message", "User not found"
+                    ));
+        }
+
         if (!passwordEncoder.matches(
                 request.getMasterPassword(),
                 user.getMasterPasswordHash())) {
 
-            throw new RuntimeException("Invalid password");
+            return ResponseEntity
+                    .badRequest()
+                    .body(Map.of(
+                            "message", "Invalid password"
+                    ));
         }
 
         /* ===== 2FA ENABLED ===== */
+
         if (Boolean.TRUE.equals(user.getTwoFactorEnabled())) {
 
             VerificationResponseDTO otp =
@@ -88,6 +99,7 @@ public class AuthController {
         }
 
         /* ===== NORMAL LOGIN ===== */
+
         String token =
                 jwtUtil.generateToken(user.getUsername());
 
