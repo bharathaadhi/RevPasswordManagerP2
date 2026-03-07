@@ -605,16 +605,14 @@ Expires in 5 minutes.
 
         next: () => {
 
-          p.favorite = newValue;
-
-          /* update master list */
-
           const index = this.allPasswords.findIndex(x => x.id === p.id);
 
           if (index !== -1) {
             this.allPasswords[index].favorite = newValue;
           }
 
+          this.passwords = [...this.allPasswords];
+          
           this.favoriteCount =
             this.allPasswords.filter(x => x.favorite).length;
 
