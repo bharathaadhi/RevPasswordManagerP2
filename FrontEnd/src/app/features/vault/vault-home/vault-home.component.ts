@@ -104,14 +104,14 @@ export class VaultHomeComponent implements OnInit {
       const user = localStorage.getItem('username');
       if (!user) return;
 
+      this.loadVault();
+
       if (params['filter'] === 'weak') {
-        this.loadWeakPasswords(user);
+        setTimeout(() => this.loadWeakPasswords(user), 300);
       }
-      else if (params['filter'] === 'favorite') {
-        this.loadFavorites();
-      }
-      else {
-        this.loadVault();
+
+      if (params['filter'] === 'favorite') {
+        setTimeout(() => this.loadFavorites(), 300);
       }
 
       if (params['generatedPassword']) {
@@ -255,7 +255,17 @@ export class VaultHomeComponent implements OnInit {
 
   loadFavorites() {
 
-    this.passwords = this.allPasswords.filter(p => p.favorite);
+    this.api.getVault().subscribe((res: any[]) => {
+
+      this.allPasswords = res;
+
+      this.passwords = res.filter(p => p.favorite);
+
+      this.favoriteCount = this.passwords.length;
+
+      this.cd.detectChanges();
+
+    });
 
   }
 
@@ -263,28 +273,28 @@ export class VaultHomeComponent implements OnInit {
 
   loadWeakPasswords(user: string) {
 
-  // first load all vault data
-  this.api.getVault().subscribe((vault: any[]) => {
+    // first load all vault data
+    this.api.getVault().subscribe((vault: any[]) => {
 
-    this.allPasswords = vault;
+      this.allPasswords = vault;
 
-    // then get weak password IDs
-    this.api.getWeakPasswords(user).subscribe((weak: any[]) => {
+      // then get weak password IDs
+      this.api.getWeakPasswords(user).subscribe((weak: any[]) => {
 
-      const weakIds = weak.map(w => w.id);
+        const weakIds = weak.map(w => w.id);
 
-      this.passwords = vault.filter(v => weakIds.includes(v.id));
+        this.passwords = vault.filter(v => weakIds.includes(v.id));
 
-      this.totalPasswords = vault.length;
-      this.weakCount = weak.length;
+        this.totalPasswords = vault.length;
+        this.weakCount = weak.length;
 
-      this.cd.detectChanges();
+        this.cd.detectChanges();
+
+      });
 
     });
 
-  });
-
-}
+  }
 
   /* ================= ADD PASSWORD ================= */
 
@@ -618,39 +628,31 @@ Expires in 5 minutes.
 
     const newValue = !p.favorite;
 
-    this.api.favoritePassword(p.id, newValue)
-      .subscribe({
+    this.api.favoritePassword(p.id, newValue).subscribe({
 
-        next: () => {
+      next: () => {
 
-          const index = this.allPasswords.findIndex(x => x.id === p.id);
+        p.favorite = newValue;
 
-          if (index !== -1) {
-            this.allPasswords[index].favorite = newValue;
-          }
-
-          this.passwords = [...this.allPasswords];
-
-          this.favoriteCount =
-            this.allPasswords.filter(x => x.favorite).length;
-
-          this.showToast(
-            "Favorite updated",
-            "toast-success"
-          );
-
-        },
-
-        error: () => {
-
-          this.showToast(
-            "Favorite update failed",
-            "toast-error"
-          );
-
+        const index = this.allPasswords.findIndex(x => x.id === p.id);
+        if (index !== -1) {
+          this.allPasswords[index].favorite = newValue;
         }
 
-      });
+        this.favoriteCount =
+          this.allPasswords.filter(x => x.favorite).length;
+
+        this.showToast("Favorite updated", "toast-success");
+
+        this.cd.detectChanges();
+
+      },
+
+      error: () => {
+        this.showToast("Favorite update failed", "toast-error");
+      }
+
+    });
 
   }
 
