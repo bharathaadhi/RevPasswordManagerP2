@@ -62,7 +62,7 @@ export class GeneratorHomeComponent {
 
     if (!this.selectedPassword) return;
 
-    if (navigator.clipboard) {
+    if (navigator.clipboard && window.isSecureContext) {
 
       navigator.clipboard.writeText(this.selectedPassword)
         .then(() => {
