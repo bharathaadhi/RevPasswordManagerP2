@@ -59,14 +59,31 @@ export class GeneratorHomeComponent {
   }
 
   copyToClipboard() {
+
     if (!this.selectedPassword) return;
 
-    navigator.clipboard.writeText(this.selectedPassword);
-    this.copied = true;
+    if (navigator.clipboard) {
 
-    setTimeout(() => {
-      this.copied = false;
-    }, 2000);
+      navigator.clipboard.writeText(this.selectedPassword)
+        .then(() => {
+          this.copied = true;
+          setTimeout(() => this.copied = false, 2000);
+        });
+
+    } else {
+
+      const textarea = document.createElement("textarea");
+      textarea.value = this.selectedPassword;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+
+      this.copied = true;
+      setTimeout(() => this.copied = false, 2000);
+
+    }
+
   }
 
   saveToVault() {
