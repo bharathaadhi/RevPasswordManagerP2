@@ -50,7 +50,7 @@ export class SecurityAuditComponent implements OnInit {
         this.weakPasswords = [];
       }
 
-      this.cd.detectChanges(); // force UI update
+      this.cd.detectChanges(); 
     });
 
     // ===== REUSED PASSWORDS =====
