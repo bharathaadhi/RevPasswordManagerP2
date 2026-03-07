@@ -263,15 +263,20 @@ export class VaultHomeComponent implements OnInit {
 
   loadWeakPasswords(user: string) {
 
-  this.api.getWeakPasswords(user).subscribe((res: any[]) => {
+  // first load all vault data
+  this.api.getVault().subscribe((vault: any[]) => {
 
-    this.passwords = res;
+    this.allPasswords = vault;
 
-    this.api.getVault().subscribe((vault: any[]) => {
+    // then get weak password IDs
+    this.api.getWeakPasswords(user).subscribe((weak: any[]) => {
 
-      this.allPasswords = vault;
+      const weakIds = weak.map(w => w.id);
+
+      this.passwords = vault.filter(v => weakIds.includes(v.id));
+
       this.totalPasswords = vault.length;
-      this.weakCount = res.length;
+      this.weakCount = weak.length;
 
       this.cd.detectChanges();
 
