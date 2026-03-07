@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class VaultService {
 
-  private baseUrl = 'http://localhost:8080/api/vault';
+  private baseUrl = '/api/vault';
 
   constructor(private http: HttpClient){}
 
@@ -16,7 +16,7 @@ export class VaultService {
     return this.http.get<any[]>(this.baseUrl);
   }
 
-  // ✅ ADD PASSWORD (THIS WAS MISSING)
+  // ADD PASSWORD 
   addPassword(payload:any): Observable<any>{
     return this.http.post(this.baseUrl, payload);
   }

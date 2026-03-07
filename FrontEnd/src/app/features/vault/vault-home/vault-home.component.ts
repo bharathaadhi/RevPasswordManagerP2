@@ -99,36 +99,26 @@ export class VaultHomeComponent implements OnInit {
 
     if (!isPlatformBrowser(this.platformId)) return;
 
-    const user = localStorage.getItem('username');
-    if (!user) return;
-
-    this.loadVault();
-
     this.route.queryParams.subscribe(params => {
 
-      /* GENERATED PASSWORD FROM GENERATOR */
-
-      if (params['generatedPassword']) {
-
-        setTimeout(() => {
-
-          this.openAdd();
-          this.newPassword.password = params['generatedPassword'];
-
-        });
-
-      }
-
-      /* WEAK PASSWORD FILTER */
+      const user = localStorage.getItem('username');
+      if (!user) return;
 
       if (params['filter'] === 'weak') {
         this.loadWeakPasswords(user);
       }
-
-      /* FAVORITES FILTER */
-
-      if (params['filter'] === 'favorite') {
+      else if (params['filter'] === 'favorite') {
         this.loadFavorites();
+      }
+      else {
+        this.loadVault();
+      }
+
+      if (params['generatedPassword']) {
+        setTimeout(() => {
+          this.openAdd();
+          this.newPassword.password = params['generatedPassword'];
+        });
       }
 
     });
@@ -168,25 +158,6 @@ export class VaultHomeComponent implements OnInit {
         this.favoriteCount =
           this.allPasswords.filter(p => p.favorite).length;
 
-        this.weakCount =
-          this.allPasswords.filter(p => p.strength === 'Weak').length;
-
-        /* calculate security score */
-
-        if (this.totalPasswords > 0) {
-
-          const strongCount =
-            this.allPasswords.filter(p => p.strength === 'Strong').length;
-
-          this.securityScore =
-            Math.round((strongCount / this.totalPasswords) * 100);
-
-        } else {
-
-          this.securityScore = 0;
-
-        }
-
         this.cd.detectChanges();
 
       }
@@ -199,6 +170,8 @@ export class VaultHomeComponent implements OnInit {
 
         this.weakCount = report.weakPasswords;
         this.securityScore = report.securityScore;
+
+        this.cd.detectChanges();
 
       }
 
@@ -474,7 +447,7 @@ export class VaultHomeComponent implements OnInit {
 
     }
 
-    this.isVerifying = false;
+    this.isVerifying = true;
 
     this.api.viewPassword({
 
