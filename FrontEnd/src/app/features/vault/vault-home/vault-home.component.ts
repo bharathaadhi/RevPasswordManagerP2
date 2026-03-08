@@ -255,11 +255,11 @@ export class VaultHomeComponent implements OnInit {
 
   loadFavorites() {
 
-    this.api.getVault().subscribe((res: any[]) => {
+    this.api.getVault().subscribe((vault: any[]) => {
 
-      this.allPasswords = res;
+      this.allPasswords = vault;
 
-      this.passwords = res.filter(p => p.favorite);
+      this.passwords = vault.filter(p => p.favorite);
 
       this.favoriteCount = this.passwords.length;
 
@@ -273,19 +273,17 @@ export class VaultHomeComponent implements OnInit {
 
   loadWeakPasswords(user: string) {
 
-    // first load all vault data
     this.api.getVault().subscribe((vault: any[]) => {
 
       this.allPasswords = vault;
+      this.totalPasswords = vault.length;
 
-      // then get weak password IDs
       this.api.getWeakPasswords(user).subscribe((weak: any[]) => {
 
         const weakIds = weak.map(w => w.id);
 
-        this.passwords = vault.filter(v => weakIds.includes(v.id));
+        this.passwords = vault.filter(p => weakIds.includes(p.id));
 
-        this.totalPasswords = vault.length;
         this.weakCount = weak.length;
 
         this.cd.detectChanges();
@@ -635,6 +633,7 @@ Expires in 5 minutes.
         p.favorite = newValue;
 
         const index = this.allPasswords.findIndex(x => x.id === p.id);
+
         if (index !== -1) {
           this.allPasswords[index].favorite = newValue;
         }
