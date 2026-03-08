@@ -58,34 +58,6 @@ export class GeneratorHomeComponent {
     this.copied = false;
   }
 
-  copyToClipboard() {
-
-    if (!this.selectedPassword) return;
-
-    if (navigator.clipboard && window.isSecureContext) {
-
-      navigator.clipboard.writeText(this.selectedPassword)
-        .then(() => {
-          this.copied = true;
-          setTimeout(() => this.copied = false, 2000);
-        });
-
-    } else {
-
-      const textarea = document.createElement("textarea");
-      textarea.value = this.selectedPassword;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textarea);
-
-      this.copied = true;
-      setTimeout(() => this.copied = false, 2000);
-
-    }
-
-  }
-
   saveToVault() {
 
     this.router.navigate(['/vault'], {
